@@ -1,17 +1,62 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
-export default function App() {
+function TopBar() {
   return (
-    <main className="landing">
-      <div className="landing__inner">
-        <header className="landing__header">
-          <h1 className="landing__title">
-            Hangar <span className="landing__accent">24</span>
-          </h1>
-          <p className="landing__tagline">Your photo hangar.</p>
-        </header>
+    <header className="topbar">
+      <span className="topbar__logo">
+        Hangar <span className="topbar__logo-accent">24</span>
+      </span>
+      <button className="topbar__upload" type="button" aria-label="Upload photo">
+        ↑ Upload
+      </button>
+    </header>
+  );
+}
+
+function PhotoTile({ photo }) {
+  return (
+    <div className="wall__tile">
+      <span className="wall__tile-label">{photo.original_filename}</span>
+    </div>
+  );
+}
+
+function Wall({ photos }) {
+  return (
+    <section className="wall">
+      <div className="wall__grid">
+        {photos.map((photo) => (
+          <PhotoTile key={photo.id} photo={photo} />
+        ))}
       </div>
-    </main>
+    </section>
+  );
+}
+
+export default function App() {
+  const [photos, setPhotos] = useState([]);
+  const [status, setStatus] = useState('loading');
+
+  useEffect(() => {
+    fetch('/api/photos')
+      .then((res) => {
+        if (!res.ok) throw new Error('fetch failed');
+        return res.json();
+      })
+      .then((data) => {
+        setPhotos(data.photos ?? []);
+        setStatus('ready');
+      })
+      .catch(() => setStatus('error'));
+  }, []);
+
+  return (
+    <div className="app">
+      <TopBar />
+      {status === 'loading' && <p className="app__message">Loading…</p>}
+      {status === 'error' && <p className="app__message app__message--error">Failed to load photos.</p>}
+      {status === 'ready' && <Wall photos={photos} />}
+    </div>
   );
 }
