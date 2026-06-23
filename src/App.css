@@ -22,21 +22,22 @@
   justify-content: space-between;
   background: #374652;
   padding: 0 1rem;
-  height: 96px;
+  height: 104px;
   flex-shrink: 0;
 }
 
 @media (min-width: 480px) {
   .topbar {
     padding: 0 1.5rem;
-    height: 112px;
+    height: 120px;
   }
 }
 
 .topbar__word {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.7rem;
+  font-size: 2rem;
   font-weight: 400;
+  font-style: italic;
   letter-spacing: -0.01em;
   color: #DFD3C2;
   user-select: none;
@@ -44,16 +45,20 @@
 
 .topbar__num {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.7rem;
+  font-size: 2rem;
   font-weight: 400;
   color: #FBAD19;
   user-select: none;
+  margin-right: 0.75rem;
 }
 
 @media (min-width: 480px) {
-  .topbar__word,
+  .topbar__word {
+    font-size: 2.4rem;
+  }
   .topbar__num {
-    font-size: 2.1rem;
+    font-size: 2.4rem;
+    margin-right: 1rem;
   }
 }
 
@@ -67,6 +72,7 @@
   padding: 0;
   line-height: 0;
   cursor: pointer;
+  align-self: flex-end;
   transition: opacity 0.15s;
 }
 
@@ -81,7 +87,7 @@
 
 .topbar__hangar-img {
   display: block;
-  height: 80px;
+  height: 100px;
   width: auto;
   object-fit: contain;
 }
@@ -92,7 +98,7 @@
 
 @media (min-width: 480px) {
   .topbar__hangar-img {
-    height: 96px;
+    height: 116px;
   }
 }
 
