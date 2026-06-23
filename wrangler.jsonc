@@ -13,5 +13,6 @@
   ],
   "r2_buckets": [
     { "binding": "IMAGES", "bucket_name": "hangar24-images" }
-  ]
+  ],
+  "images": { "binding": "IMG" }
 }
