@@ -10,7 +10,7 @@ export default {
 
     if (request.method === 'GET' && url.pathname === '/api/photos') {
       const { results } = await env.DB.prepare(
-        'SELECT id, r2_key, original_filename, uploaded_at FROM photos ORDER BY uploaded_at DESC, id DESC'
+        'SELECT id, r2_key, original_filename, uploaded_at FROM photos ORDER BY id DESC'
       ).all();
       return Response.json({ photos: results });
     }
@@ -24,9 +24,10 @@ export default {
 
         await env.IMAGES.put(key, request.body, { httpMetadata: { contentType: mime } });
 
+        const now = new Date().toISOString();
         const result = await env.DB.prepare(
-          'INSERT INTO photos (r2_key, original_filename) VALUES (?, ?)'
-        ).bind(key, filename).run();
+          'INSERT INTO photos (r2_key, original_filename, uploaded_at) VALUES (?, ?, ?)'
+        ).bind(key, filename, now).run();
 
         return Response.json({ ok: true, id: result.meta.last_row_id, r2_key: key });
       } catch (err) {
