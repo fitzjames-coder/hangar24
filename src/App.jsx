@@ -13,9 +13,7 @@ function TopBar({ onUpload, uploading }) {
 
   return (
     <header className="topbar">
-      <span className="topbar__logo">
-        Hangar <span className="topbar__logo-accent">24</span>
-      </span>
+      <span className="topbar__word">Hangar</span>
       <input
         ref={inputRef}
         type="file"
@@ -26,14 +24,19 @@ function TopBar({ onUpload, uploading }) {
         tabIndex={-1}
       />
       <button
-        className="topbar__upload"
         type="button"
-        aria-label="Upload photo"
+        className="topbar__hangar-btn"
+        aria-label="Upload photo — add an aircraft to the hangar"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
       >
-        {uploading ? 'Uploading…' : '↑ Upload'}
+        <img
+          src="/hangar24-logo.png"
+          alt=""
+          className={`topbar__hangar-img${uploading ? ' topbar__hangar-img--uploading' : ''}`}
+        />
       </button>
+      <span className="topbar__num">24</span>
     </header>
   );
 }
