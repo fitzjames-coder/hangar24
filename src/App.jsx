@@ -41,28 +41,61 @@ function TopBar({ onUpload, uploading }) {
   );
 }
 
-function DetailView({ photo, onBack }) {
-  const previewSrc = `/img/${photo.r2_key}?size=preview`;
-  const originalSrc = `/img/${photo.r2_key}`;
-  const [imgSrc, setImgSrc] = useState(previewSrc);
-  const [imgFailed, setImgFailed] = useState(false);
+function DetailView({ photos, index, onBack, onPrev, onNext }) {
+  const photo = photos[index];
+  const isFirst = index === 0;
+  const isLast = index === photos.length - 1;
 
-  function handleImgError() {
-    if (imgSrc === previewSrc) {
-      setImgSrc(originalSrc);
-    } else {
-      setImgFailed(true);
-    }
+  // 0 = try preview, 1 = try original, 2 = failed
+  const [fallbackLevel, setFallbackLevel] = useState(0);
+
+  // Reset fallback whenever the photo changes
+  useEffect(() => { setFallbackLevel(0); }, [photo.r2_key]);
+
+  const imgSrc = fallbackLevel === 0
+    ? `/img/${photo.r2_key}?size=preview`
+    : `/img/${photo.r2_key}`;
+  const imgFailed = fallbackLevel >= 2;
+
+  // Touch swipe handling
+  const touchStart = useRef(null);
+
+  function handleTouchStart(e) {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+
+  function handleTouchEnd(e) {
+    if (!touchStart.current) return;
+    const dx = e.changedTouches[0].clientX - touchStart.current.x;
+    const dy = e.changedTouches[0].clientY - touchStart.current.y;
+    touchStart.current = null;
+    if (Math.abs(dx) < 50) return;
+    if (Math.abs(dy) > Math.abs(dx)) return; // ignore vertical-dominant gestures
+    if (dx < 0) onNext();
+    else onPrev();
   }
 
   return (
-    <div className="detail">
+    <div
+      className="detail"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <header className="detail__bar">
         <button type="button" className="detail__back" onClick={onBack} aria-label="Back to wall">
           <span className="detail__back-chevron">‹</span> Back
         </button>
       </header>
       <div className="detail__body">
+        <button
+          type="button"
+          className="detail__nav detail__nav--prev"
+          onClick={onPrev}
+          disabled={isFirst}
+          aria-label="Previous photo"
+        >
+          ‹
+        </button>
         {imgFailed ? (
           <p className="detail__unavailable">Image unavailable</p>
         ) : (
@@ -70,9 +103,18 @@ function DetailView({ photo, onBack }) {
             className="detail__img"
             src={imgSrc}
             alt={photo.original_filename || ''}
-            onError={handleImgError}
+            onError={() => setFallbackLevel(l => l + 1)}
           />
         )}
+        <button
+          type="button"
+          className="detail__nav detail__nav--next"
+          onClick={onNext}
+          disabled={isLast}
+          aria-label="Next photo"
+        >
+          ›
+        </button>
         <div className="detail__spacer" />
       </div>
     </div>
@@ -87,10 +129,10 @@ function PhotoTile({ photo, onClick }) {
     return (
       <div
         className="wall__tile wall__tile--placeholder"
-        onClick={() => onClick(photo)}
+        onClick={onClick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && onClick(photo)}
+        onKeyDown={(e) => e.key === 'Enter' && onClick()}
       />
     );
   }
@@ -98,10 +140,10 @@ function PhotoTile({ photo, onClick }) {
   return (
     <div
       className="wall__tile"
-      onClick={() => onClick(photo)}
+      onClick={onClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick(photo)}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
     >
       <img
         className="wall__tile-img"
@@ -117,8 +159,8 @@ function Wall({ photos, onSelect }) {
   return (
     <section className="wall">
       <div className="wall__grid">
-        {photos.map((photo) => (
-          <PhotoTile key={photo.id} photo={photo} onClick={onSelect} />
+        {photos.map((photo, idx) => (
+          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(idx)} />
         ))}
       </div>
     </section>
@@ -130,7 +172,7 @@ export default function App() {
   const [status, setStatus] = useState('loading');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
 
   function loadPhotos() {
     return fetch('/api/photos')
@@ -166,10 +208,16 @@ export default function App() {
     }
   }
 
-  if (selectedPhoto) {
+  if (selectedIndex !== null && photos.length > 0) {
     return (
       <div className="app">
-        <DetailView photo={selectedPhoto} onBack={() => setSelectedPhoto(null)} />
+        <DetailView
+          photos={photos}
+          index={selectedIndex}
+          onBack={() => setSelectedIndex(null)}
+          onPrev={() => setSelectedIndex(i => Math.max(0, i - 1))}
+          onNext={() => setSelectedIndex(i => Math.min(photos.length - 1, i + 1))}
+        />
       </div>
     );
   }
@@ -182,7 +230,7 @@ export default function App() {
       )}
       {status === 'loading' && <p className="app__message">Loading…</p>}
       {status === 'error' && <p className="app__message app__message--error">Failed to load photos.</p>}
-      {status === 'ready' && <Wall photos={photos} onSelect={setSelectedPhoto} />}
+      {status === 'ready' && <Wall photos={photos} onSelect={setSelectedIndex} />}
     </div>
   );
 }
