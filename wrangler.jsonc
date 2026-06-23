@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hangar24",
+  "compatibility_date": "2026-06-01",
+  "main": "worker/index.js",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "hangar24-db", "database_id": "dc9c85df-7392-48b6-b4fd-c9d3c9972651" }
+  ],
+  "r2_buckets": [
+    { "binding": "IMAGES", "bucket_name": "hangar24-images" }
+  ]
+}
