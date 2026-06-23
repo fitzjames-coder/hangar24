@@ -41,17 +41,68 @@ function TopBar({ onUpload, uploading }) {
   );
 }
 
-function PhotoTile({ photo }) {
+function DetailView({ photo, onBack }) {
+  const previewSrc = `/img/${photo.r2_key}?size=preview`;
+  const originalSrc = `/img/${photo.r2_key}`;
+  const [imgSrc, setImgSrc] = useState(previewSrc);
   const [imgFailed, setImgFailed] = useState(false);
 
-  const isSeed = photo.r2_key.startsWith('seed/');
-
-  if (isSeed || imgFailed) {
-    return <div className="wall__tile wall__tile--placeholder" />;
+  function handleImgError() {
+    if (imgSrc === previewSrc) {
+      setImgSrc(originalSrc);
+    } else {
+      setImgFailed(true);
+    }
   }
 
   return (
-    <div className="wall__tile">
+    <div className="detail">
+      <header className="detail__bar">
+        <button type="button" className="detail__back" onClick={onBack} aria-label="Back to wall">
+          <span className="detail__back-chevron">‹</span> Back
+        </button>
+      </header>
+      <div className="detail__body">
+        {imgFailed ? (
+          <p className="detail__unavailable">Image unavailable</p>
+        ) : (
+          <img
+            className="detail__img"
+            src={imgSrc}
+            alt={photo.original_filename || ''}
+            onError={handleImgError}
+          />
+        )}
+        <div className="detail__spacer" />
+      </div>
+    </div>
+  );
+}
+
+function PhotoTile({ photo, onClick }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const isSeed = photo.r2_key.startsWith('seed/');
+
+  if (isSeed || imgFailed) {
+    return (
+      <div
+        className="wall__tile wall__tile--placeholder"
+        onClick={() => onClick(photo)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && onClick(photo)}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="wall__tile"
+      onClick={() => onClick(photo)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick(photo)}
+    >
       <img
         className="wall__tile-img"
         src={`/img/${photo.r2_key}?size=thumb`}
@@ -62,12 +113,12 @@ function PhotoTile({ photo }) {
   );
 }
 
-function Wall({ photos }) {
+function Wall({ photos, onSelect }) {
   return (
     <section className="wall">
       <div className="wall__grid">
         {photos.map((photo) => (
-          <PhotoTile key={photo.id} photo={photo} />
+          <PhotoTile key={photo.id} photo={photo} onClick={onSelect} />
         ))}
       </div>
     </section>
@@ -79,6 +130,7 @@ export default function App() {
   const [status, setStatus] = useState('loading');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   function loadPhotos() {
     return fetch('/api/photos')
@@ -114,6 +166,14 @@ export default function App() {
     }
   }
 
+  if (selectedPhoto) {
+    return (
+      <div className="app">
+        <DetailView photo={selectedPhoto} onBack={() => setSelectedPhoto(null)} />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <TopBar onUpload={handleUpload} uploading={uploading} />
@@ -122,7 +182,7 @@ export default function App() {
       )}
       {status === 'loading' && <p className="app__message">Loading…</p>}
       {status === 'error' && <p className="app__message app__message--error">Failed to load photos.</p>}
-      {status === 'ready' && <Wall photos={photos} />}
+      {status === 'ready' && <Wall photos={photos} onSelect={setSelectedPhoto} />}
     </div>
   );
 }
