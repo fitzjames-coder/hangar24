@@ -4,9 +4,7 @@ import './App.css';
 function TopBar() {
   return (
     <header className="topbar">
-      <span className="topbar__logo">
-        Hangar <span className="topbar__logo-accent">24</span>
-      </span>
+      <img src="/hangar24-logo-wide.png" alt="Hangar 24" className="topbar__logo-img" />
       <button className="topbar__upload" type="button" aria-label="Upload photo">
         ↑ Upload
       </button>

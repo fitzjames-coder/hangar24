@@ -33,17 +33,17 @@
   }
 }
 
-.topbar__logo {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.25rem;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: #DFD3C2;
-  user-select: none;
+.topbar__logo-img {
+  display: block;
+  height: 34px;
+  width: auto;
+  object-fit: contain;
 }
 
-.topbar__logo-accent {
-  color: #FBAD19;
+@media (min-width: 480px) {
+  .topbar__logo-img {
+    height: 38px;
+  }
 }
 
 .topbar__upload {
