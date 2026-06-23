@@ -6,7 +6,7 @@
   "assets": {
     "not_found_handling": "single-page-application",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/img/*"]
   },
   "d1_databases": [
     { "binding": "DB", "database_name": "hangar24-db", "database_id": "dc9c85df-7392-48b6-b4fd-c9d3c9972651" }
