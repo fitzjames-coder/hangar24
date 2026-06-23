@@ -5,6 +5,11 @@ function toThumbKey(originalKey) {
   return `thumbs/${basename}.webp`;
 }
 
+function toPreviewKey(originalKey) {
+  const basename = originalKey.replace(/^photos\//, '').replace(/\.[^.]+$/, '');
+  return `previews/${basename}.webp`;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -43,6 +48,18 @@ export default {
           // thumbnail generation failed — original still stored, upload succeeds
         }
 
+        try {
+          const previewKey = toPreviewKey(key);
+          const previewResponse = await env.IMG
+            .input(bytes)
+            .transform({ width: 1600, height: 1600, fit: 'scale-down' })
+            .output({ format: 'image/webp' })
+            .response();
+          await env.IMAGES.put(previewKey, previewResponse.body, { httpMetadata: { contentType: 'image/webp' } });
+        } catch (_e) {
+          // preview generation failed — thumbnail and original unaffected
+        }
+
         const now = new Date().toISOString();
         const result = await env.DB.prepare(
           'INSERT INTO photos (r2_key, original_filename, uploaded_at) VALUES (?, ?, ?)'
@@ -70,6 +87,20 @@ export default {
           });
         }
         // fall through to original if no thumb
+      }
+
+      if (size === 'preview') {
+        const previewKey = toPreviewKey(key);
+        const preview = await env.IMAGES.get(previewKey);
+        if (preview) {
+          return new Response(preview.body, {
+            headers: {
+              'Content-Type': 'image/webp',
+              'Cache-Control': 'public, max-age=31536000',
+            },
+          });
+        }
+        // fall through to original if no preview
       }
 
       const obj = await env.IMAGES.get(key);
