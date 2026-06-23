@@ -51,7 +51,7 @@ function PhotoTile({ photo }) {
     <div className="wall__tile">
       <img
         className="wall__tile-img"
-        src={`/img/${photo.r2_key}`}
+        src={`/img/${photo.r2_key}?size=thumb`}
         alt={photo.original_filename || ''}
         onError={() => setImgFailed(true)}
       />

@@ -1,5 +1,10 @@
 const MIME_TO_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 
+function toThumbKey(originalKey) {
+  const basename = originalKey.replace(/^photos\//, '').replace(/\.[^.]+$/, '');
+  return `thumbs/${basename}.webp`;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -22,7 +27,21 @@ export default {
         const ext = MIME_TO_EXT[mime] ?? 'jpg';
         const key = `photos/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
 
-        await env.IMAGES.put(key, request.body, { httpMetadata: { contentType: mime } });
+        const bytes = await request.arrayBuffer();
+
+        await env.IMAGES.put(key, bytes, { httpMetadata: { contentType: mime } });
+
+        try {
+          const thumbKey = toThumbKey(key);
+          const thumbResponse = await env.IMG
+            .input(bytes)
+            .transform({ width: 600, height: 600, fit: 'cover' })
+            .output({ format: 'image/webp' })
+            .response();
+          await env.IMAGES.put(thumbKey, thumbResponse.body, { httpMetadata: { contentType: 'image/webp' } });
+        } catch (_e) {
+          // thumbnail generation failed — original still stored, upload succeeds
+        }
 
         const now = new Date().toISOString();
         const result = await env.DB.prepare(
@@ -37,6 +56,22 @@ export default {
 
     if (request.method === 'GET' && url.pathname.startsWith('/img/')) {
       const key = decodeURIComponent(url.pathname.slice('/img/'.length));
+      const size = url.searchParams.get('size');
+
+      if (size === 'thumb') {
+        const thumbKey = toThumbKey(key);
+        const thumb = await env.IMAGES.get(thumbKey);
+        if (thumb) {
+          return new Response(thumb.body, {
+            headers: {
+              'Content-Type': 'image/webp',
+              'Cache-Control': 'public, max-age=31536000',
+            },
+          });
+        }
+        // fall through to original if no thumb
+      }
+
       const obj = await env.IMAGES.get(key);
       if (!obj) return new Response('Not found', { status: 404 });
       return new Response(obj.body, {
