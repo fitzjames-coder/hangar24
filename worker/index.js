@@ -379,6 +379,44 @@ export default {
       });
     }
 
+    const photoDescMatch = url.pathname.match(/^\/api\/photos\/(\d+)\/description$/);
+    if (request.method === 'POST' && photoDescMatch) {
+      try {
+        const id = parseInt(photoDescMatch[1], 10);
+        let body;
+        try { body = await request.json(); } catch (_) {
+          return Response.json({ ok: false, error: 'invalid JSON body' }, { status: 400 });
+        }
+        if (body === null || typeof body.description === 'undefined') {
+          return Response.json({ ok: false, error: 'missing description field' }, { status: 400 });
+        }
+        const description = String(body.description);
+        await env.DB.prepare('UPDATE photos SET description = ? WHERE id = ?').bind(description, id).run();
+        return Response.json({ ok: true, id, description });
+      } catch (err) {
+        return Response.json({ ok: false, error: err.message }, { status: 500 });
+      }
+    }
+
+    const photoIdMatch = url.pathname.match(/^\/api\/photos\/(\d+)$/);
+    if (request.method === 'DELETE' && photoIdMatch) {
+      try {
+        const id = parseInt(photoIdMatch[1], 10);
+        const row = await env.DB.prepare('SELECT r2_key FROM photos WHERE id = ?').bind(id).first();
+        if (!row) return Response.json({ ok: false, error: 'not found' }, { status: 404 });
+        const originalKey = row.r2_key;
+        const thumbKey = toThumbKey(originalKey);
+        const previewKey = toPreviewKey(originalKey);
+        try { await env.IMAGES.delete(originalKey); } catch (_) {}
+        try { await env.IMAGES.delete(thumbKey); } catch (_) {}
+        try { await env.IMAGES.delete(previewKey); } catch (_) {}
+        await env.DB.prepare('DELETE FROM photos WHERE id = ?').bind(id).run();
+        return Response.json({ ok: true, id });
+      } catch (err) {
+        return Response.json({ ok: false, error: err.message }, { status: 500 });
+      }
+    }
+
     return env.ASSETS.fetch(request);
   },
 };

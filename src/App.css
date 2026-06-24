@@ -166,60 +166,6 @@
   overflow: hidden;
 }
 
-.detail__bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  padding: 0 1rem;
-  height: 52px;
-  background: linear-gradient(to bottom, rgba(10, 14, 19, 0.75) 0%, transparent 100%);
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-@media (min-width: 480px) {
-  .detail__bar {
-    padding: 0 1.5rem;
-    height: 58px;
-  }
-}
-
-.detail__bar.is-hidden {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.detail__back {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  color: #DFD3C2;
-  padding: 0.5rem 0;
-  transition: opacity 0.15s;
-}
-
-.detail__back:hover,
-.detail__back:active {
-  opacity: 0.7;
-}
-
-.detail__back-chevron {
-  font-size: 1.3rem;
-  line-height: 1;
-  color: #FBAD19;
-}
-
 /* Immersive (default): image centred fullscreen */
 .detail__body {
   flex: 1;
@@ -387,6 +333,117 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ── Detail actions row ────────────────────────────────────── */
+.detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.detail__action-btn {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.7rem;
+  border-radius: 3px;
+  border: 1px solid rgba(223, 211, 194, 0.2);
+  background: rgba(55, 70, 82, 0.6);
+  color: #DFD3C2;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.detail__action-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.detail__action-btn:not(:disabled):hover,
+.detail__action-btn:not(:disabled):active {
+  opacity: 0.75;
+}
+
+.detail__action-btn--primary {
+  background: #FBAD19;
+  color: #0A0E13;
+  border-color: #FBAD19;
+  opacity: 1;
+}
+
+.detail__action-btn--primary:not(:disabled):hover,
+.detail__action-btn--primary:not(:disabled):active {
+  opacity: 0.85;
+}
+
+.detail__action-btn--danger {
+  background: transparent;
+  color: #E8607A;
+  border-color: rgba(232, 96, 122, 0.4);
+}
+
+.detail__action-btn--danger:not(:disabled):hover,
+.detail__action-btn--danger:not(:disabled):active {
+  background: rgba(232, 96, 122, 0.12);
+  opacity: 1;
+}
+
+.detail__action-btn--back {
+  margin-left: auto;
+  color: #FBAD19;
+  border-color: rgba(251, 173, 25, 0.3);
+}
+
+/* ── Description textarea (edit mode) ──────────────────────── */
+.detail__desc-textarea {
+  display: block;
+  width: 100%;
+  background: rgba(37, 45, 51, 0.8);
+  border: 1px solid rgba(223, 211, 194, 0.15);
+  border-radius: 3px;
+  color: #DFD3C2;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  padding: 0.45rem 0.6rem;
+  resize: vertical;
+  min-height: 68px;
+  margin-bottom: 0.45rem;
+}
+
+.detail__desc-textarea:focus {
+  outline: none;
+  border-color: rgba(251, 173, 25, 0.5);
+}
+
+.detail__desc-textarea::placeholder {
+  color: rgba(183, 169, 156, 0.35);
+}
+
+/* ── Delete confirm ─────────────────────────────────────────── */
+.detail__delete-confirm {
+  margin-bottom: 0.6rem;
+}
+
+.detail__delete-msg {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #B7A99C;
+  margin-bottom: 0.45rem;
+}
+
+/* ── Inline action error ───────────────────────────────────── */
+.detail__action-error {
+  font-size: 0.7rem;
+  color: #E8607A;
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
 }
 
 /* ── Landscape: immersive — no detail panel, fix viewport ──── */
