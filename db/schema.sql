@@ -3,7 +3,19 @@ CREATE TABLE IF NOT EXISTS photos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   r2_key TEXT NOT NULL UNIQUE,
   original_filename TEXT,
-  uploaded_at TEXT NOT NULL DEFAULT (datetime('now'))
+  uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
+  title TEXT,
+  description TEXT,
+  keywords TEXT,
+  taken_at TEXT,
+  camera TEXT,
+  lens TEXT,
+  aperture TEXT,
+  shutter TEXT,
+  iso TEXT,
+  focal_length TEXT,
+  flash TEXT,
+  white_balance TEXT
 );
 -- DISPOSABLE TEST DATA — delete before go-live
 INSERT INTO photos (r2_key, original_filename, uploaded_at) VALUES
