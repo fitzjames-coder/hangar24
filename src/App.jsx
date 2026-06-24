@@ -178,22 +178,20 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
             >
               ⚙
             </button>
-            <div className="detail__cool">
-              <button
-                type="button"
-                className="detail__posted-btn"
-                onClick={handlePostedToggle}
-                disabled={postedSaving}
-                aria-label={localPosted ? 'Mark as unposted' : 'Mark as posted'}
-              >
-                <img
-                  className="detail__posted-icon"
-                  src={localPosted ? '/icon-posted-on.png' : '/icon-posted-off.png'}
-                  alt={localPosted ? 'Posted' : 'Not posted'}
-                  onError={e => { e.currentTarget.style.display = 'none'; }}
-                />
-              </button>
-            </div>
+            <button
+              type="button"
+              className="detail__posted-btn"
+              onClick={handlePostedToggle}
+              disabled={postedSaving}
+              aria-label={localPosted ? 'Mark as unposted' : 'Mark as posted'}
+            >
+              <img
+                className="detail__posted-icon"
+                src={localPosted ? '/icon-posted-on.png' : '/icon-posted-off.png'}
+                alt={localPosted ? 'Posted' : 'Not posted'}
+                onError={e => { e.currentTarget.style.display = 'none'; }}
+              />
+            </button>
             <button type="button" className="detail__back-arrow" onClick={onBack} aria-label="Back">
               ‹
             </button>
@@ -419,26 +417,11 @@ function PhotoTile({ photo, onClick }) {
 // ── Wall ──────────────────────────────────────────────────────────────────────
 
 function Wall({ photos, onSelect }) {
-  const [unpostedOnly, setUnpostedOnly] = useState(false);
-
-  const displayPhotos = unpostedOnly
-    ? photos.map((p, i) => ({ photo: p, origIdx: i })).filter(({ photo }) => !photo.posted)
-    : photos.map((p, i) => ({ photo: p, origIdx: i }));
-
   return (
     <section className="wall">
-      <div className="wall__filter-bar">
-        <button
-          type="button"
-          className={`wall__filter-pill${unpostedOnly ? ' wall__filter-pill--active' : ''}`}
-          onClick={() => setUnpostedOnly(v => !v)}
-        >
-          Unposted only
-        </button>
-      </div>
       <div className="wall__grid">
-        {displayPhotos.map(({ photo, origIdx }) => (
-          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(origIdx)} />
+        {photos.map((photo, idx) => (
+          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(idx)} />
         ))}
       </div>
     </section>

@@ -490,19 +490,8 @@
   margin-bottom: 0.4rem;
 }
 
-.detail__cool {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(55, 70, 82, 0.35);
-  border: 1px solid rgba(223, 211, 194, 0.1);
-  border-radius: 8px;
-  padding: 0.4rem 0.5rem;
-  min-height: 46px;
-}
-
 .detail__posted-btn {
+  flex: 1;
   background: transparent;
   border: none;
   padding: 2px;
@@ -547,42 +536,6 @@
 .detail__back-arrow:hover,
 .detail__back-arrow:active {
   opacity: 0.7;
-}
-
-/* ── Wall filter bar ───────────────────────────────────────── */
-.wall__filter-bar {
-  padding: 0.6rem 1rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.wall__filter-pill {
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.28rem 0.75rem;
-  border-radius: 99px;
-  border: 1px solid rgba(223, 211, 194, 0.2);
-  background: transparent;
-  color: #8A837D;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  line-height: 1.4;
-}
-
-.wall__filter-pill--active {
-  background: #FBAD19;
-  color: #0A0E13;
-  border-color: #FBAD19;
-}
-
-.wall__filter-pill:not(.wall__filter-pill--active):hover {
-  color: #DFD3C2;
-  border-color: rgba(223, 211, 194, 0.4);
 }
 
 /* ── Wall tile posted indicator ────────────────────────────── */
