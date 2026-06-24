@@ -46,17 +46,22 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
 
   // 0 = try preview, 1 = try original, 2 = failed
   const [fallbackLevel, setFallbackLevel] = useState(0);
+  const [chromeVisible, setChromeVisible] = useState(false);
 
-  // Reset fallback whenever the photo changes
-  useEffect(() => { setFallbackLevel(0); }, [photo.r2_key]);
+  // Reset per-photo state when the photo changes
+  useEffect(() => {
+    setFallbackLevel(0);
+    setChromeVisible(false);
+  }, [photo.r2_key]);
 
   const imgSrc = fallbackLevel === 0
     ? `/img/${photo.r2_key}?size=preview`
     : `/img/${photo.r2_key}`;
   const imgFailed = fallbackLevel >= 2;
 
-  // Touch swipe handling
+  // Touch: track start coords and whether the touch was already handled
   const touchStart = useRef(null);
+  const touchHandled = useRef(false);
 
   function handleTouchStart(e) {
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -67,10 +72,27 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
     const dx = e.changedTouches[0].clientX - touchStart.current.x;
     const dy = e.changedTouches[0].clientY - touchStart.current.y;
     touchStart.current = null;
-    if (Math.abs(dx) < 50) return;
-    if (Math.abs(dy) > Math.abs(dx)) return; // ignore vertical-dominant gestures
-    if (dx < 0) onNext();
-    else onPrev();
+
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      // tap — toggle chrome; mark handled so onClick doesn't double-fire
+      touchHandled.current = true;
+      setChromeVisible(v => !v);
+      return;
+    }
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
+      // horizontal swipe — change photo
+      if (dx < 0) onNext();
+      else onPrev();
+    }
+    // vertical-dominant or in-between — do nothing
+  }
+
+  function handleBodyClick() {
+    if (touchHandled.current) {
+      touchHandled.current = false;
+      return;
+    }
+    setChromeVisible(v => !v);
   }
 
   return (
@@ -79,12 +101,12 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <header className="detail__bar">
+      <header className={`detail__bar${chromeVisible ? '' : ' is-hidden'}`}>
         <button type="button" className="detail__back" onClick={onBack} aria-label="Back to wall">
           <span className="detail__back-chevron">‹</span> Back
         </button>
       </header>
-      <div className="detail__body">
+      <div className="detail__body" onClick={handleBodyClick}>
         {imgFailed ? (
           <p className="detail__unavailable">Image unavailable</p>
         ) : (
@@ -95,7 +117,6 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
             onError={() => setFallbackLevel(l => l + 1)}
           />
         )}
-        <div className="detail__spacer" />
       </div>
     </div>
   );
