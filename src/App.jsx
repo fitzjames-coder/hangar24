@@ -1,6 +1,133 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
+// ── SVG icons (inline line-art, stroke only) ──────────────────────────────────
+
+function IconCamera() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="8" width="24" height="16" rx="2" />
+      <path d="M9 8V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V8" />
+      <circle cx="14" cy="16" r="4.5" />
+    </svg>
+  );
+}
+
+function IconLens() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="14" cy="14" r="11" />
+      <circle cx="14" cy="14" r="6" />
+      <circle cx="14" cy="14" r="2" />
+    </svg>
+  );
+}
+
+function IconAperture() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="14" cy="14" r="11" />
+      <polygon points="14,7.5 19.7,10.8 19.7,17.2 14,20.5 8.3,17.2 8.3,10.8" />
+    </svg>
+  );
+}
+
+function IconISO() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="2" y="7" width="24" height="14" rx="3" />
+      <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor" stroke="none" fontFamily="Helvetica,Arial,sans-serif">ISO</text>
+    </svg>
+  );
+}
+
+function IconShutter() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="14" cy="16" r="10" />
+      <line x1="11.5" y1="3" x2="16.5" y2="3" />
+      <line x1="14" y1="3" x2="14" y2="6" />
+      <line x1="14" y1="16" x2="14" y2="10" />
+      <line x1="14" y1="16" x2="19" y2="16" />
+    </svg>
+  );
+}
+
+function IconFocalLength() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="5" cy="14" r="2" />
+      <line x1="7" y1="14" x2="23" y2="4" />
+      <line x1="7" y1="14" x2="23" y2="24" />
+      <line x1="23" y1="4" x2="23" y2="24" />
+    </svg>
+  );
+}
+
+function IconFlash() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 3L6 17h8l-3 8 13-14h-8L14 3z" />
+    </svg>
+  );
+}
+
+function IconWhiteBalance() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="2" y="7" width="24" height="14" rx="3" />
+      <text x="14" y="18" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="currentColor" stroke="none" fontFamily="Helvetica,Arial,sans-serif">WB</text>
+    </svg>
+  );
+}
+
+// ── ExifCell ──────────────────────────────────────────────────────────────────
+
+function ExifCell({ icon, label, value }) {
+  return (
+    <div className="exif__cell">
+      <span className="exif__icon">{icon}</span>
+      <span className="exif__stack">
+        <span className="exif__label">{label}</span>
+        <span className="exif__value">{value || '—'}</span>
+      </span>
+    </div>
+  );
+}
+
+// ── DetailInfo ────────────────────────────────────────────────────────────────
+
+function DetailInfo({ photo }) {
+  return (
+    <div className="detail__info">
+      {(photo.title || photo.taken_at) && (
+        <div className="detail__heading">
+          {photo.title && <p className="detail__reg">{photo.title}</p>}
+          {photo.taken_at && <p className="detail__date">{photo.taken_at}</p>}
+        </div>
+      )}
+      {photo.description && (
+        <p className="detail__desc">{photo.description}</p>
+      )}
+      <section className="exif">
+        <h3 className="exif__header">TECHNICAL</h3>
+        <div className="exif__grid">
+          <ExifCell icon={<IconCamera />} label="CAMERA" value={photo.camera} />
+          <ExifCell icon={<IconLens />} label="LENS" value={photo.lens} />
+          <ExifCell icon={<IconAperture />} label="APERTURE" value={photo.aperture} />
+          <ExifCell icon={<IconISO />} label="ISO" value={photo.iso} />
+          <ExifCell icon={<IconShutter />} label="SHUTTER" value={photo.shutter} />
+          <ExifCell icon={<IconFocalLength />} label="FOCAL LENGTH" value={photo.focal_length} />
+          <ExifCell icon={<IconFlash />} label="FLASH" value={photo.flash} />
+          <ExifCell icon={<IconWhiteBalance />} label="WHITE BALANCE" value={photo.white_balance} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ── TopBar ────────────────────────────────────────────────────────────────────
+
 function TopBar({ onUpload, uploading }) {
   const inputRef = useRef(null);
 
@@ -41,6 +168,8 @@ function TopBar({ onUpload, uploading }) {
   );
 }
 
+// ── DetailView ────────────────────────────────────────────────────────────────
+
 function DetailView({ photos, index, onBack, onPrev, onNext }) {
   const photo = photos[index];
 
@@ -48,10 +177,11 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
   const [fallbackLevel, setFallbackLevel] = useState(0);
   const [chromeVisible, setChromeVisible] = useState(false);
 
-  // Reset per-photo state when the photo changes
+  // Reset per-photo state and scroll to top when the photo changes
   useEffect(() => {
     setFallbackLevel(0);
     setChromeVisible(false);
+    window.scrollTo(0, 0);
   }, [photo.r2_key]);
 
   const imgSrc = fallbackLevel === 0
@@ -74,9 +204,12 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
     touchStart.current = null;
 
     if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-      // tap — toggle chrome; mark handled so onClick doesn't double-fire
+      // tap — toggle chrome; scroll to top when hiding so image is centred
       touchHandled.current = true;
-      setChromeVisible(v => !v);
+      setChromeVisible(v => {
+        if (v) window.scrollTo(0, 0);
+        return !v;
+      });
       return;
     }
     if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
@@ -84,7 +217,7 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
       if (dx < 0) onNext();
       else onPrev();
     }
-    // vertical-dominant or in-between — do nothing
+    // vertical-dominant or in-between — do nothing (native scroll)
   }
 
   function handleBodyClick() {
@@ -92,35 +225,47 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
       touchHandled.current = false;
       return;
     }
-    setChromeVisible(v => !v);
+    setChromeVisible(v => {
+      if (v) window.scrollTo(0, 0);
+      return !v;
+    });
   }
 
   return (
-    <div
-      className="detail"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="detail">
       <header className={`detail__bar${chromeVisible ? '' : ' is-hidden'}`}>
         <button type="button" className="detail__back" onClick={onBack} aria-label="Back to wall">
           <span className="detail__back-chevron">‹</span> Back
         </button>
       </header>
-      <div className="detail__body" onClick={handleBodyClick}>
+      <div
+        className="detail__body"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleBodyClick}
+      >
         {imgFailed ? (
           <p className="detail__unavailable">Image unavailable</p>
         ) : (
-          <img
-            className="detail__img"
-            src={imgSrc}
-            alt={photo.original_filename || ''}
-            onError={() => setFallbackLevel(l => l + 1)}
-          />
+          <div className="detail__img-wrap">
+            <img
+              className="detail__img"
+              src={imgSrc}
+              alt={photo.original_filename || ''}
+              onError={() => setFallbackLevel(l => l + 1)}
+            />
+            {photo.title && (
+              <span className="detail__img-reg">{photo.title}</span>
+            )}
+          </div>
         )}
       </div>
+      {chromeVisible && <DetailInfo photo={photo} />}
     </div>
   );
 }
+
+// ── PhotoTile ─────────────────────────────────────────────────────────────────
 
 function PhotoTile({ photo, onClick }) {
   const [imgFailed, setImgFailed] = useState(false);
@@ -152,9 +297,14 @@ function PhotoTile({ photo, onClick }) {
         alt={photo.original_filename || ''}
         onError={() => setImgFailed(true)}
       />
+      {photo.title && (
+        <span className="wall__tile-reg">{photo.title}</span>
+      )}
     </div>
   );
 }
+
+// ── Wall ──────────────────────────────────────────────────────────────────────
 
 function Wall({ photos, onSelect }) {
   return (
@@ -167,6 +317,8 @@ function Wall({ photos, onSelect }) {
     </section>
   );
 }
+
+// ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [photos, setPhotos] = useState([]);

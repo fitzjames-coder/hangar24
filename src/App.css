@@ -137,6 +137,7 @@
   overflow: hidden;
   display: block;
   cursor: pointer;
+  position: relative;
 }
 
 .wall__tile:active {
@@ -161,7 +162,6 @@
   flex-direction: column;
   min-height: 100vh;
   background: #0A0E13;
-  overflow: hidden;
 }
 
 .detail__bar {
@@ -243,15 +243,154 @@
   padding: 3rem 0;
 }
 
-/* ── Landscape: fix viewport for iOS Safari ────────────────── */
+/* ── Wall tile registration overlay ───────────────────────── */
+.wall__tile-reg {
+  position: absolute;
+  bottom: 4px;
+  right: 5px;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #DFD3C2;
+  opacity: 0.55;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+}
+
+/* ── Detail image wrapper + reg overlay ────────────────────── */
+.detail__img-wrap {
+  position: relative;
+  line-height: 0;
+  max-width: 100%;
+}
+
+.detail__img-reg {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #DFD3C2;
+  opacity: 0.5;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Detail info panel (portrait, chrome visible) ──────────── */
+.detail__info {
+  padding: 2rem 1.25rem 5rem;
+  background: #0A0E13;
+}
+
+.detail__heading {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(223, 211, 194, 0.1);
+}
+
+.detail__reg {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #DFD3C2;
+  line-height: 1.1;
+}
+
+.detail__date {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: #8A837D;
+}
+
+.detail__desc {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #B7A99C;
+  margin-bottom: 2rem;
+}
+
+/* ── EXIF spec sheet ───────────────────────────────────────── */
+.exif__header {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8A837D;
+  margin-bottom: 0.75rem;
+}
+
+.exif__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(223, 211, 194, 0.08);
+  border: 1px solid rgba(223, 211, 194, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.exif__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 0.85rem;
+  background: #0A0E13;
+}
+
+.exif__icon {
+  flex-shrink: 0;
+  color: rgba(223, 211, 194, 0.4);
+  display: flex;
+  align-items: center;
+}
+
+.exif__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.exif__label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8A837D;
+  line-height: 1;
+}
+
+.exif__value {
+  font-size: 0.82rem;
+  color: #DFD3C2;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Landscape: immersive — no detail panel, fix viewport ──── */
 @media (orientation: landscape) {
   .detail {
     position: fixed;
     inset: 0;
     min-height: unset;
+    overflow: hidden;
   }
 
   .detail__body {
     min-height: unset;
+  }
+
+  .detail__info {
+    display: none;
   }
 }
