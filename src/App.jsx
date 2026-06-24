@@ -240,22 +240,15 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
           </div>
           {adminOpen && (
             <div className="detail__admin-btns">
-              <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>
-                {copyState === 'copied' ? 'Copied ✓' : 'Copy'}
-              </button>
-              <button type="button" className="detail__action-btn" onClick={handleEditStart}>
-                Edit
-              </button>
-              <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>
-                Del
-              </button>
+              <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>{copyState === 'copied' ? 'Copied ✓' : 'Copy'}</button>
+              <button type="button" className="detail__action-btn" onClick={handleEditStart}>Edit</button>
+              <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>Del</button>
             </div>
           )}
           {postedError && <p className="detail__action-error">{postedError}</p>}
           {starredError && <p className="detail__action-error">{starredError}</p>}
         </>
       )}
-
       <section className="exif">
         <h3 className="exif__header">TECHNICAL</h3>
         <div className="exif__grid">
