@@ -305,9 +305,16 @@
 
 .exif__icon {
   flex-shrink: 0;
-  color: rgba(223, 211, 194, 0.4);
   display: flex;
   align-items: center;
+}
+
+.exif__icon-img {
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(82%) sepia(8%) saturate(400%) hue-rotate(350deg) brightness(92%);
 }
 
 .exif__stack {

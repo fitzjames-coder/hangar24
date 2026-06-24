@@ -1,128 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
-// ── SVG icons (inline line-art, stroke only) ──────────────────────────────────
-
-function IconCamera() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="8" width="24" height="16" rx="2" />
-      <path d="M9 8V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V8" />
-      <circle cx="14" cy="16" r="4.5" />
-    </svg>
-  );
-}
-
-function IconLens() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="14" cy="14" r="11" />
-      <circle cx="14" cy="14" r="6" />
-      <circle cx="14" cy="14" r="2" />
-    </svg>
-  );
-}
-
-function IconAperture() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="14" cy="14" r="11" />
-      <polygon points="14,7.5 19.7,10.8 19.7,17.2 14,20.5 8.3,17.2 8.3,10.8" />
-    </svg>
-  );
-}
-
-function IconISO() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="2" y="7" width="24" height="14" rx="3" />
-      <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor" stroke="none" fontFamily="Helvetica,Arial,sans-serif">ISO</text>
-    </svg>
-  );
-}
-
-function IconShutter() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="14" cy="16" r="10" />
-      <line x1="11.5" y1="3" x2="16.5" y2="3" />
-      <line x1="14" y1="3" x2="14" y2="6" />
-      <line x1="14" y1="16" x2="14" y2="10" />
-      <line x1="14" y1="16" x2="19" y2="16" />
-    </svg>
-  );
-}
-
-function IconFocalLength() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="5" cy="14" r="2" />
-      <line x1="7" y1="14" x2="23" y2="4" />
-      <line x1="7" y1="14" x2="23" y2="24" />
-      <line x1="23" y1="4" x2="23" y2="24" />
-    </svg>
-  );
-}
-
-function IconFlash() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 3L6 17h8l-3 8 13-14h-8L14 3z" />
-    </svg>
-  );
-}
-
-function IconWhiteBalance() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="2" y="7" width="24" height="14" rx="3" />
-      <text x="14" y="18" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="currentColor" stroke="none" fontFamily="Helvetica,Arial,sans-serif">WB</text>
-    </svg>
-  );
-}
-
-function IconMeter() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 22 A10 10 0 0 1 23 22" />
-      <line x1="8" y1="19.5" x2="9.7" y2="17" />
-      <line x1="20" y1="19.5" x2="18.3" y2="17" />
-      <line x1="14" y1="12" x2="14" y2="22" />
-      <circle cx="14" cy="22" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function IconMegapixels() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="7" width="22" height="14" rx="1.5" />
-      <line x1="10" y1="7" x2="10" y2="21" />
-      <line x1="18" y1="7" x2="18" y2="21" />
-      <line x1="3" y1="14" x2="25" y2="14" />
-    </svg>
-  );
-}
-
-function IconAspectRatio() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="7" width="20" height="14" rx="1.5" />
-      <polyline points="4,16 4,21 9,21" />
-      <polyline points="24,12 24,7 19,7" />
-    </svg>
-  );
-}
-
-function IconFileSize() {
-  return (
-    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7 4h10l6 6v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" />
-      <polyline points="17,4 17,10 23,10" />
-    </svg>
-  );
-}
-
 // ── ExifCell ──────────────────────────────────────────────────────────────────
 
 function ExifCell({ icon, label, value }) {
@@ -281,16 +159,16 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
       <section className="exif">
         <h3 className="exif__header">TECHNICAL</h3>
         <div className="exif__grid">
-          <ExifCell icon={<IconCamera />} label="CAMERA" value={photo.camera} />
-          <ExifCell icon={<IconLens />} label="LENS" value={photo.lens} />
-          <ExifCell icon={<IconAperture />} label="APERTURE" value={photo.aperture} />
-          <ExifCell icon={<IconISO />} label="ISO" value={photo.iso} />
-          <ExifCell icon={<IconShutter />} label="SHUTTER SPEED" value={photo.shutter} />
-          <ExifCell icon={<IconFocalLength />} label="FOCAL LENGTH" value={focalDisplay} />
-          <ExifCell icon={<IconMeter />} label="METERING" value={photo.metering} />
-          <ExifCell icon={<IconMegapixels />} label="MEGAPIXELS" value={photo.megapixels} />
-          <ExifCell icon={<IconAspectRatio />} label="ASPECT RATIO" value={photo.aspect_ratio} />
-          <ExifCell icon={<IconFileSize />} label="FILE SIZE" value={photo.file_size} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-camera.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="CAMERA" value={photo.camera} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-lens.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="LENS" value={photo.lens} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-aperture.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="APERTURE" value={photo.aperture} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-iso.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="ISO" value={photo.iso} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-shutter.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="SHUTTER SPEED" value={photo.shutter} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-focal.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="FOCAL LENGTH" value={focalDisplay} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-metering.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="METERING" value={photo.metering} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-megapixels.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="MEGAPIXELS" value={photo.megapixels} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-aspect-ratio.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="ASPECT RATIO" value={photo.aspect_ratio} />
+          <ExifCell icon={<img className="exif__icon-img" src="/icon-filesize.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="FILE SIZE" value={photo.file_size} />
         </div>
       </section>
     </div>
@@ -329,7 +207,7 @@ function TopBar({ onUpload, uploading }) {
         onClick={() => inputRef.current?.click()}
       >
         <img
-          src="/hangar24-logo.png"
+          src="/hangar24-logo.PNG"
           alt=""
           className={`topbar__hangar-img${uploading ? ' topbar__hangar-img--uploading' : ''}`}
         />
