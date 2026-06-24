@@ -234,6 +234,9 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
                 onError={e => { e.currentTarget.style.display = 'none'; }}
               />
             </button>
+            <button type="button" className="detail__back-arrow" onClick={onBack} aria-label="Back">
+              ‹
+            </button>
           </div>
           {adminOpen && (
             <div className="detail__admin-btns">
@@ -455,9 +458,6 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
           onPostedUpdate={onPostedUpdate}
           onStarredUpdate={onStarredUpdate}
         />
-      )}
-      {chromeVisible && (
-        <button type="button" className="detail__back-corner" onClick={onBack} aria-label="Back">‹</button>
       )}
     </div>
   );
