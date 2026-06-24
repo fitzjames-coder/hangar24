@@ -409,7 +409,6 @@ function PhotoTile({ photo, onClick }) {
       {photo.title && (
         <span className="wall__tile-reg">{photo.title}</span>
       )}
-      {photo.posted ? <span className="wall__tile-posted" /> : null}
     </div>
   );
 }
