@@ -246,7 +246,7 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
           {starredError && <p className="detail__action-error">{starredError}</p>}
         </>
       )}
-      <section>
+      <section className="exif">
         <h3 className="exif__header">TECHNICAL</h3>
         <div className="exif__grid">
           <ExifCell icon={<img className="exif__icon-img" src="/icon-camera.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="CAMERA" value={photo.camera} />
