@@ -17,7 +17,7 @@ function ExifCell({ icon, label, value }) {
 
 // ── DetailInfo ────────────────────────────────────────────────────────────────
 
-function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
+function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpdate }) {
   const parts = photo.taken_at ? photo.taken_at.split(' ') : [];
   const dateStr = parts[0] || null;
   const timeStr = parts[1] || null;
@@ -37,6 +37,10 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
   const [deleteStep, setDeleteStep] = useState('idle');
   const [deleteError, setDeleteError] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [localPosted, setLocalPosted] = useState(photo.posted ? 1 : 0);
+  const [postedSaving, setPostedSaving] = useState(false);
+  const [postedError, setPostedError] = useState(null);
 
   useEffect(() => {
     setEditMode(false);
@@ -45,6 +49,9 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
     setDeleteStep('idle');
     setDeleteError(null);
     setCopyState('idle');
+    setAdminOpen(false);
+    setLocalPosted(photo.posted ? 1 : 0);
+    setPostedError(null);
   }, [photo.id]);
 
   async function handleCopy() {
@@ -90,6 +97,29 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
     } catch (err) {
       setDeleteError(err.message || 'Delete failed');
       setDeleting(false);
+    }
+  }
+
+  async function handlePostedToggle() {
+    if (postedSaving) return;
+    const newPosted = localPosted ? 0 : 1;
+    setLocalPosted(newPosted);
+    setPostedSaving(true);
+    setPostedError(null);
+    try {
+      const res = await fetch(`/api/photos/${photo.id}/posted`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ posted: newPosted }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Update failed');
+      onPostedUpdate(photo.id, newPosted);
+    } catch (err) {
+      setLocalPosted(newPosted ? 0 : 1);
+      setPostedError(err.message || 'Update failed');
+    } finally {
+      setPostedSaving(false);
     }
   }
 
@@ -139,20 +169,49 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
       ) : (
         <>
           {photo.description && <p className="detail__desc">{photo.description}</p>}
-          <div className="detail__actions">
-            <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>
-              {copyState === 'copied' ? 'Copied ✓' : 'Copy'}
+          <div className="detail__controls">
+            <button
+              type="button"
+              className={`detail__admin-toggle${adminOpen ? ' detail__admin-toggle--open' : ''}`}
+              onClick={() => setAdminOpen(v => !v)}
+              aria-label="Admin tools"
+            >
+              ⚙
             </button>
-            <button type="button" className="detail__action-btn" onClick={handleEditStart}>
-              Edit
-            </button>
-            <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>
-              Del
-            </button>
-            <button type="button" className="detail__action-btn detail__action-btn--back" onClick={onBack}>
-              ‹ Back
+            <div className="detail__cool">
+              <button
+                type="button"
+                className="detail__posted-btn"
+                onClick={handlePostedToggle}
+                disabled={postedSaving}
+                aria-label={localPosted ? 'Mark as unposted' : 'Mark as posted'}
+              >
+                <img
+                  className="detail__posted-icon"
+                  src={localPosted ? '/icon-posted-on.png' : '/icon-posted-off.png'}
+                  alt={localPosted ? 'Posted' : 'Not posted'}
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              </button>
+            </div>
+            <button type="button" className="detail__back-arrow" onClick={onBack} aria-label="Back">
+              ‹
             </button>
           </div>
+          {adminOpen && (
+            <div className="detail__admin-btns">
+              <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>
+                {copyState === 'copied' ? 'Copied ✓' : 'Copy'}
+              </button>
+              <button type="button" className="detail__action-btn" onClick={handleEditStart}>
+                Edit
+              </button>
+              <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>
+                Del
+              </button>
+            </div>
+          )}
+          {postedError && <p className="detail__action-error">{postedError}</p>}
         </>
       )}
 
@@ -219,7 +278,7 @@ function TopBar({ onUpload, uploading }) {
 
 // ── DetailView ────────────────────────────────────────────────────────────────
 
-function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete }) {
+function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete, onPostedUpdate }) {
   const photo = photos[index];
 
   // 0 = try preview, 1 = try original, 2 = failed
@@ -304,7 +363,15 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
           </div>
         )}
       </div>
-      {chromeVisible && <DetailInfo photo={photo} onDescriptionUpdate={onDescriptionUpdate} onDelete={onDelete} onBack={onBack} />}
+      {chromeVisible && (
+        <DetailInfo
+          photo={photo}
+          onDescriptionUpdate={onDescriptionUpdate}
+          onDelete={onDelete}
+          onBack={onBack}
+          onPostedUpdate={onPostedUpdate}
+        />
+      )}
     </div>
   );
 }
@@ -344,6 +411,7 @@ function PhotoTile({ photo, onClick }) {
       {photo.title && (
         <span className="wall__tile-reg">{photo.title}</span>
       )}
+      {photo.posted ? <span className="wall__tile-posted" /> : null}
     </div>
   );
 }
@@ -351,11 +419,26 @@ function PhotoTile({ photo, onClick }) {
 // ── Wall ──────────────────────────────────────────────────────────────────────
 
 function Wall({ photos, onSelect }) {
+  const [unpostedOnly, setUnpostedOnly] = useState(false);
+
+  const displayPhotos = unpostedOnly
+    ? photos.map((p, i) => ({ photo: p, origIdx: i })).filter(({ photo }) => !photo.posted)
+    : photos.map((p, i) => ({ photo: p, origIdx: i }));
+
   return (
     <section className="wall">
+      <div className="wall__filter-bar">
+        <button
+          type="button"
+          className={`wall__filter-pill${unpostedOnly ? ' wall__filter-pill--active' : ''}`}
+          onClick={() => setUnpostedOnly(v => !v)}
+        >
+          Unposted only
+        </button>
+      </div>
       <div className="wall__grid">
-        {photos.map((photo, idx) => (
-          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(idx)} />
+        {displayPhotos.map(({ photo, origIdx }) => (
+          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(origIdx)} />
         ))}
       </div>
     </section>
@@ -414,6 +497,10 @@ export default function App() {
     setSelectedIndex(null);
   }
 
+  function handlePostedUpdate(id, posted) {
+    setPhotos(ps => ps.map(p => p.id === id ? { ...p, posted } : p));
+  }
+
   if (selectedIndex !== null && photos.length > 0) {
     return (
       <div className="app">
@@ -425,6 +512,7 @@ export default function App() {
           onNext={() => setSelectedIndex(i => Math.min(photos.length - 1, i + 1))}
           onDescriptionUpdate={handleDescriptionUpdate}
           onDelete={handleDelete}
+          onPostedUpdate={handlePostedUpdate}
         />
       </div>
     );

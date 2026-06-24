@@ -262,7 +262,8 @@ export default {
         `SELECT id, r2_key, original_filename, uploaded_at,
            title, description, keywords, taken_at, camera, lens,
            aperture, shutter, iso, focal_length, focal_length_35mm,
-           flash, white_balance, metering, megapixels, aspect_ratio, file_size
+           flash, white_balance, metering, megapixels, aspect_ratio, file_size,
+           posted
          FROM photos ORDER BY id DESC`
       ).all();
       return Response.json({ photos: results });
@@ -393,6 +394,25 @@ export default {
         const description = String(body.description);
         await env.DB.prepare('UPDATE photos SET description = ? WHERE id = ?').bind(description, id).run();
         return Response.json({ ok: true, id, description });
+      } catch (err) {
+        return Response.json({ ok: false, error: err.message }, { status: 500 });
+      }
+    }
+
+    const photoPostedMatch = url.pathname.match(/^\/api\/photos\/(\d+)\/posted$/);
+    if (request.method === 'POST' && photoPostedMatch) {
+      try {
+        const id = parseInt(photoPostedMatch[1], 10);
+        let body;
+        try { body = await request.json(); } catch (_) {
+          return Response.json({ ok: false, error: 'invalid JSON body' }, { status: 400 });
+        }
+        if (body === null || typeof body.posted === 'undefined') {
+          return Response.json({ ok: false, error: 'missing posted field' }, { status: 400 });
+        }
+        const posted = body.posted ? 1 : 0;
+        await env.DB.prepare('UPDATE photos SET posted = ? WHERE id = ?').bind(posted, id).run();
+        return Response.json({ ok: true, id, posted });
       } catch (err) {
         return Response.json({ ok: false, error: err.message }, { status: 500 });
       }
