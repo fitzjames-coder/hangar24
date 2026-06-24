@@ -232,7 +232,7 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
   }
 
   return (
-    <div className="detail">
+    <div className={`detail${chromeVisible ? ' detail--info-open' : ''}`}>
       <header className={`detail__bar${chromeVisible ? '' : ' is-hidden'}`}>
         <button type="button" className="detail__back" onClick={onBack} aria-label="Back to wall">
           <span className="detail__back-chevron">‹</span> Back

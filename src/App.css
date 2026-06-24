@@ -161,7 +161,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100vh;
   background: #0A0E13;
+  overflow: hidden;
 }
 
 .detail__bar {
@@ -218,6 +220,7 @@
   color: #FBAD19;
 }
 
+/* Immersive (default): image centred fullscreen */
 .detail__body {
   flex: 1;
   display: flex;
@@ -226,6 +229,13 @@
   min-height: 100vh;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Info open: body shrinks to content, image anchors to top */
+.detail--info-open .detail__body {
+  flex: none;
+  min-height: auto;
+  align-items: flex-start;
 }
 
 .detail__img {
@@ -284,19 +294,21 @@
 
 /* ── Detail info panel (portrait, chrome visible) ──────────── */
 .detail__info {
-  padding: 2rem 1.25rem 5rem;
+  padding: 0.75rem 1.25rem 1rem;
   background: #0A0E13;
+  flex: 1;
+  overflow: hidden;
 }
 
 .detail__heading {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.6rem;
   border-bottom: 1px solid rgba(223, 211, 194, 0.1);
 }
 
 .detail__reg {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 400;
   letter-spacing: 0.04em;
   color: #DFD3C2;
@@ -304,27 +316,27 @@
 }
 
 .detail__date {
-  margin-top: 0.4rem;
-  font-size: 0.78rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
   letter-spacing: 0.06em;
   color: #8A837D;
 }
 
 .detail__desc {
-  font-size: 0.88rem;
-  line-height: 1.65;
+  font-size: 0.8rem;
+  line-height: 1.45;
   color: #B7A99C;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
 }
 
 /* ── EXIF spec sheet ───────────────────────────────────────── */
 .exif__header {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #8A837D;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.45rem;
 }
 
 .exif__grid {
@@ -340,8 +352,8 @@
 .exif__cell {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.8rem 0.85rem;
+  gap: 0.55rem;
+  padding: 0.5rem 0.7rem;
   background: #0A0E13;
 }
 
@@ -382,12 +394,13 @@
   .detail {
     position: fixed;
     inset: 0;
-    min-height: unset;
-    overflow: hidden;
+    height: 100%;
   }
 
-  .detail__body {
+  .detail--info-open .detail__body {
+    flex: 1;
     min-height: unset;
+    align-items: center;
   }
 
   .detail__info {
