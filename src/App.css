@@ -156,7 +156,10 @@
   padding: 0;
   line-height: 0;
   cursor: pointer;
-  align-self: flex-end;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
   transition: opacity 0.15s;
 }
 
@@ -171,7 +174,7 @@
 
 .topbar__hangar-img {
   display: block;
-  height: 104px;
+  height: 116px;
   width: auto;
   object-fit: contain;
 }
@@ -182,7 +185,7 @@
 
 @media (min-width: 480px) {
   .topbar__hangar-img {
-    height: 124px;
+    height: 136px;
   }
 }
 
@@ -612,8 +615,8 @@
 }
 
 .detail__posted-icon[src*="star"] {
-  width: 58px;
-  height: 58px;
+  width: 84px;
+  height: 84px;
 }
 
 .detail__back-arrow {
