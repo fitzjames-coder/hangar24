@@ -297,7 +297,7 @@
   padding: 0.75rem 1.25rem 1rem;
   background: #0A0E13;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .detail__heading {

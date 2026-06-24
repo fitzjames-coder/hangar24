@@ -14,8 +14,13 @@ CREATE TABLE IF NOT EXISTS photos (
   shutter TEXT,
   iso TEXT,
   focal_length TEXT,
+  focal_length_35mm TEXT,
   flash TEXT,
-  white_balance TEXT
+  white_balance TEXT,
+  metering TEXT,
+  megapixels TEXT,
+  aspect_ratio TEXT,
+  file_size TEXT
 );
 -- DISPOSABLE TEST DATA — delete before go-live
 INSERT INTO photos (r2_key, original_filename, uploaded_at) VALUES

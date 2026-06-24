@@ -81,6 +81,48 @@ function IconWhiteBalance() {
   );
 }
 
+function IconMeter() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 22 A10 10 0 0 1 23 22" />
+      <line x1="8" y1="19.5" x2="9.7" y2="17" />
+      <line x1="20" y1="19.5" x2="18.3" y2="17" />
+      <line x1="14" y1="12" x2="14" y2="22" />
+      <circle cx="14" cy="22" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconMegapixels() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="7" width="22" height="14" rx="1.5" />
+      <line x1="10" y1="7" x2="10" y2="21" />
+      <line x1="18" y1="7" x2="18" y2="21" />
+      <line x1="3" y1="14" x2="25" y2="14" />
+    </svg>
+  );
+}
+
+function IconAspectRatio() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="7" width="20" height="14" rx="1.5" />
+      <polyline points="4,16 4,21 9,21" />
+      <polyline points="24,12 24,7 19,7" />
+    </svg>
+  );
+}
+
+function IconFileSize() {
+  return (
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 4h10l6 6v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" />
+      <polyline points="17,4 17,10 23,10" />
+    </svg>
+  );
+}
+
 // ── ExifCell ──────────────────────────────────────────────────────────────────
 
 function ExifCell({ icon, label, value }) {
@@ -98,12 +140,25 @@ function ExifCell({ icon, label, value }) {
 // ── DetailInfo ────────────────────────────────────────────────────────────────
 
 function DetailInfo({ photo }) {
+  const parts = photo.taken_at ? photo.taken_at.split(' ') : [];
+  const dateStr = parts[0] || null;
+  const timeStr = parts[1] || null;
+
+  let focalDisplay = photo.focal_length || null;
+  if (photo.focal_length_35mm && photo.focal_length && photo.focal_length_35mm !== photo.focal_length) {
+    focalDisplay = `${photo.focal_length_35mm} (${photo.focal_length})`;
+  } else if (photo.focal_length_35mm && !photo.focal_length) {
+    focalDisplay = photo.focal_length_35mm;
+  }
+
   return (
     <div className="detail__info">
-      {(photo.title || photo.taken_at) && (
+      {(photo.title || dateStr) && (
         <div className="detail__heading">
           {photo.title && <p className="detail__reg">{photo.title}</p>}
-          {photo.taken_at && <p className="detail__date">{photo.taken_at}</p>}
+          {dateStr && (
+            <p className="detail__date">{dateStr}{timeStr && <>&nbsp;&nbsp;{timeStr}</>}</p>
+          )}
         </div>
       )}
       {photo.description && (
@@ -116,10 +171,12 @@ function DetailInfo({ photo }) {
           <ExifCell icon={<IconLens />} label="LENS" value={photo.lens} />
           <ExifCell icon={<IconAperture />} label="APERTURE" value={photo.aperture} />
           <ExifCell icon={<IconISO />} label="ISO" value={photo.iso} />
-          <ExifCell icon={<IconShutter />} label="SHUTTER" value={photo.shutter} />
-          <ExifCell icon={<IconFocalLength />} label="FOCAL LENGTH" value={photo.focal_length} />
-          <ExifCell icon={<IconFlash />} label="FLASH" value={photo.flash} />
-          <ExifCell icon={<IconWhiteBalance />} label="WHITE BALANCE" value={photo.white_balance} />
+          <ExifCell icon={<IconShutter />} label="SHUTTER SPEED" value={photo.shutter} />
+          <ExifCell icon={<IconFocalLength />} label="FOCAL LENGTH" value={focalDisplay} />
+          <ExifCell icon={<IconMeter />} label="METERING" value={photo.metering} />
+          <ExifCell icon={<IconMegapixels />} label="MEGAPIXELS" value={photo.megapixels} />
+          <ExifCell icon={<IconAspectRatio />} label="ASPECT RATIO" value={photo.aspect_ratio} />
+          <ExifCell icon={<IconFileSize />} label="FILE SIZE" value={photo.file_size} />
         </div>
       </section>
     </div>

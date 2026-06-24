@@ -17,7 +17,9 @@ function parseImageMetadata(bytes) {
     title: null, description: null, keywords: null,
     taken_at: null, camera: null, lens: null,
     aperture: null, shutter: null, iso: null,
-    focal_length: null, flash: null, white_balance: null,
+    focal_length: null, focal_length_35mm: null,
+    flash: null, white_balance: null,
+    metering: null, megapixels: null, aspect_ratio: null, file_size: null,
   };
 
   try {
@@ -109,14 +111,16 @@ function parseImageMetadata(bytes) {
       // SubIFD (ExifIFD): photo-specific tags
       if (rawExif[0x8769] != null) {
         readIFD(rawExif[0x8769], new Set([
-          0x9003, // DateTimeOriginal (ASCII)
-          0x829A, // ExposureTime     (RATIONAL)
-          0x829D, // FNumber          (RATIONAL)
-          0x8827, // ISOSpeedRatings  (SHORT)
-          0x920A, // FocalLength      (RATIONAL)
-          0x9209, // Flash            (SHORT)
-          0xA403, // WhiteBalance     (SHORT)
-          0xA434, // LensModel        (ASCII)
+          0x9003, // DateTimeOriginal         (ASCII)
+          0x829A, // ExposureTime             (RATIONAL)
+          0x829D, // FNumber                  (RATIONAL)
+          0x8827, // ISOSpeedRatings          (SHORT)
+          0x9207, // MeteringMode             (SHORT)
+          0x920A, // FocalLength              (RATIONAL)
+          0x9209, // Flash                    (SHORT)
+          0xA403, // WhiteBalance             (SHORT)
+          0xA405, // FocalLengthIn35mmFilm    (SHORT)
+          0xA434, // LensModel                (ASCII)
         ]));
       }
     }
@@ -167,11 +171,51 @@ function parseImageMetadata(bytes) {
 
     let taken_at = null;
     if (rawExif[0x9003]) {
-      const m = rawExif[0x9003].match(/^(\d{4}):(\d{2}):(\d{2})/);
-      if (m) taken_at = `${m[1]}-${m[2]}-${m[3]}`;
+      const m = rawExif[0x9003].match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/);
+      if (m) taken_at = `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}`;
     }
 
     const lens = rawExif[0xA434] || null;
+
+    let focal_length_35mm = null;
+    if (rawExif[0xA405] != null) focal_length_35mm = rawExif[0xA405] + ' mm';
+
+    const meteringMap = { 0: 'Unknown', 1: 'Average', 2: 'Center-weighted', 3: 'Spot', 4: 'Multi-spot', 5: 'Matrix', 6: 'Partial', 255: 'Other' };
+    let metering = null;
+    if (rawExif[0x9207] != null) metering = meteringMap[rawExif[0x9207]] ?? null;
+
+    // ── JPEG SOF: image dimensions ───────────────────────────────────
+    let sofWidth = 0, sofHeight = 0;
+    {
+      let p = 2;
+      while (p + 4 <= len) {
+        if (u8[p] !== 0xFF) break;
+        const mk = u8[p + 1];
+        const sl = view.getUint16(p + 2, false);
+        if (sl < 2) break;
+        if (mk >= 0xC0 && mk <= 0xC3 && p + 9 <= len) {
+          sofHeight = view.getUint16(p + 5, false);
+          sofWidth  = view.getUint16(p + 7, false);
+          break;
+        }
+        p += 2 + sl;
+      }
+    }
+
+    let megapixels = null, aspect_ratio = null;
+    if (sofWidth > 0 && sofHeight > 0) {
+      megapixels = (sofWidth * sofHeight / 1e6).toFixed(1) + ' MP';
+      let a = sofWidth, b = sofHeight;
+      while (b) { const t = b; b = a % b; a = t; }
+      const rw = sofWidth / a, rh = sofHeight / a;
+      const friendly = { '3:2': '3:2', '2:3': '3:2', '4:3': '4:3', '3:4': '4:3', '16:9': '16:9', '9:16': '16:9', '1:1': '1:1', '5:4': '5:4', '4:5': '5:4', '3:1': '3:1', '1:3': '3:1' };
+      aspect_ratio = friendly[`${rw}:${rh}`] ?? `${rw}:${rh}`;
+    }
+
+    const file_size = (() => {
+      const b = bytes.byteLength;
+      return b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+    })();
 
     // ── XMP: title, description, keywords ────────────────────────────
     let title = null, description = null, keywords = null;
@@ -197,7 +241,7 @@ function parseImageMetadata(bytes) {
       }
     } catch (_) { /* XMP parse failure is non-fatal */ }
 
-    return { title, description, keywords, taken_at, camera, lens, aperture, shutter, iso, focal_length, flash, white_balance };
+    return { title, description, keywords, taken_at, camera, lens, aperture, shutter, iso, focal_length, focal_length_35mm, flash, white_balance, metering, megapixels, aspect_ratio, file_size };
   } catch (_) {
     return empty;
   }
@@ -217,7 +261,8 @@ export default {
       const { results } = await env.DB.prepare(
         `SELECT id, r2_key, original_filename, uploaded_at,
            title, description, keywords, taken_at, camera, lens,
-           aperture, shutter, iso, focal_length, flash, white_balance
+           aperture, shutter, iso, focal_length, focal_length_35mm,
+           flash, white_balance, metering, megapixels, aspect_ratio, file_size
          FROM photos ORDER BY id DESC`
       ).all();
       return Response.json({ photos: results });
@@ -237,7 +282,9 @@ export default {
           title: null, description: null, keywords: null,
           taken_at: null, camera: null, lens: null,
           aperture: null, shutter: null, iso: null,
-          focal_length: null, flash: null, white_balance: null,
+          focal_length: null, focal_length_35mm: null,
+          flash: null, white_balance: null,
+          metering: null, megapixels: null, aspect_ratio: null, file_size: null,
         };
         try { meta = parseImageMetadata(bytes); } catch (_) {}
 
@@ -272,13 +319,16 @@ export default {
           `INSERT INTO photos
              (r2_key, original_filename, uploaded_at,
               title, description, keywords, taken_at, camera, lens,
-              aperture, shutter, iso, focal_length, flash, white_balance)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              aperture, shutter, iso, focal_length, focal_length_35mm,
+              flash, white_balance, metering, megapixels, aspect_ratio, file_size)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           key, filename, now,
           meta.title, meta.description, meta.keywords, meta.taken_at,
           meta.camera, meta.lens, meta.aperture, meta.shutter,
-          meta.iso, meta.focal_length, meta.flash, meta.white_balance
+          meta.iso, meta.focal_length, meta.focal_length_35mm,
+          meta.flash, meta.white_balance, meta.metering,
+          meta.megapixels, meta.aspect_ratio, meta.file_size
         ).run();
 
         return Response.json({ ok: true, id: result.meta.last_row_id, r2_key: key });
