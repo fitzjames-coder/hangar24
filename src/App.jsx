@@ -139,7 +139,7 @@ function ExifCell({ icon, label, value }) {
 
 // ── DetailInfo ────────────────────────────────────────────────────────────────
 
-function DetailInfo({ photo, onDescriptionUpdate, onDelete }) {
+function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack }) {
   const parts = photo.taken_at ? photo.taken_at.split(' ') : [];
   const dateStr = parts[0] || null;
   const timeStr = parts[1] || null;
@@ -269,7 +269,10 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete }) {
               Edit
             </button>
             <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>
-              Delete
+              Del
+            </button>
+            <button type="button" className="detail__action-btn detail__action-btn--back" onClick={onBack}>
+              ‹ Back
             </button>
           </div>
         </>
@@ -401,11 +404,6 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
 
   return (
     <div className={`detail${chromeVisible ? ' detail--info-open' : ''}`}>
-      <header className={`detail__bar${chromeVisible ? '' : ' is-hidden'}`}>
-        <button type="button" className="detail__back" onClick={onBack} aria-label="Back to wall">
-          <span className="detail__back-chevron">‹</span> Back
-        </button>
-      </header>
       <div
         className="detail__body"
         onTouchStart={handleTouchStart}
@@ -428,7 +426,7 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
           </div>
         )}
       </div>
-      {chromeVisible && <DetailInfo photo={photo} onDescriptionUpdate={onDescriptionUpdate} onDelete={onDelete} />}
+      {chromeVisible && <DetailInfo photo={photo} onDescriptionUpdate={onDescriptionUpdate} onDelete={onDelete} onBack={onBack} />}
     </div>
   );
 }
