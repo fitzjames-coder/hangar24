@@ -234,29 +234,19 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
                 onError={e => { e.currentTarget.style.display = 'none'; }}
               />
             </button>
-            <button type="button" className="detail__back-arrow" onClick={onBack} aria-label="Back">
-              ‹
-            </button>
           </div>
           {adminOpen && (
             <div className="detail__admin-btns">
-              <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>
-                {copyState === 'copied' ? 'Copied ✓' : 'Copy'}
-              </button>
-              <button type="button" className="detail__action-btn" onClick={handleEditStart}>
-                Edit
-              </button>
-              <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>
-                Del
-              </button>
+              <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>{copyState === 'copied' ? 'Copied ✓' : 'Copy'}</button>
+              <button type="button" className="detail__action-btn" onClick={handleEditStart}>Edit</button>
+              <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>Del</button>
             </div>
           )}
           {postedError && <p className="detail__action-error">{postedError}</p>}
           {starredError && <p className="detail__action-error">{starredError}</p>}
         </>
       )}
-
-      <section className="exif">
+      <section>
         <h3 className="exif__header">TECHNICAL</h3>
         <div className="exif__grid">
           <ExifCell icon={<img className="exif__icon-img" src="/icon-camera.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="CAMERA" value={photo.camera} />
@@ -465,6 +455,9 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
           onPostedUpdate={onPostedUpdate}
           onStarredUpdate={onStarredUpdate}
         />
+      )}
+      {chromeVisible && (
+        <button type="button" className="detail__back-corner" onClick={onBack} aria-label="Back">‹</button>
       )}
     </div>
   );
