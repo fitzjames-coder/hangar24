@@ -453,6 +453,92 @@
   line-height: 1.3;
 }
 
+/* ── Detail controls row (idle state) ──────────────────────── */
+.detail__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.detail__admin-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(223, 211, 194, 0.2);
+  background: rgba(55, 70, 82, 0.5);
+  color: #8A837D;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.detail__admin-toggle--open {
+  color: #DFD3C2;
+  border-color: rgba(223, 211, 194, 0.4);
+}
+
+.detail__admin-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+}
+
+.detail__posted-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition: transform 0.12s, opacity 0.12s;
+}
+
+.detail__posted-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.detail__posted-btn:not(:disabled):hover,
+.detail__posted-btn:not(:disabled):active {
+  transform: scale(1.08);
+}
+
+.detail__posted-icon {
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.detail__back-arrow {
+  flex-shrink: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.9rem;
+  line-height: 1;
+  color: #FBAD19;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.15rem;
+  transition: opacity 0.15s;
+}
+
+.detail__back-arrow:hover,
+.detail__back-arrow:active {
+  opacity: 0.7;
+}
+
+
 /* ── Landscape: immersive — no detail panel, fix viewport ──── */
 @media (orientation: landscape) {
   .detail {
