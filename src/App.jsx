@@ -1,6 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
+function parseKeywords(raw) {
+  if (!raw) return [];
+  try {
+    const a = JSON.parse(raw);
+    return Array.isArray(a) ? a : [];
+  } catch {
+    return [];
+  }
+}
+
 // ── ExifCell ──────────────────────────────────────────────────────────────────
 
 function ExifCell({ icon, label, value }) {
@@ -270,9 +280,16 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
-function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill }) {
+function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag }) {
   const inputRef = useRef(null);
+  const searchInputRef = useRef(null);
   const hasActiveFilter = activeFilters.size > 0;
+  const [query, setQuery] = useState('');
+  useEffect(() => { if (!searchOpen) setQuery(''); }, [searchOpen]);
+  useEffect(() => { if (searchTag) setQuery(''); }, [searchTag]);
+  useEffect(() => { if (searchOpen && !searchTag) searchInputRef.current?.focus(); }, [searchOpen, searchTag]);
+  const q = query.trim().toLowerCase();
+  const suggestions = q === '' ? tagPool.slice(0, 8) : tagPool.filter((t) => t.tag.toLowerCase().includes(q)).slice(0, 10);
 
   function handleFileChange(e) {
     const file = e.target.files?.[0];
@@ -283,7 +300,48 @@ function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters
 
   return (
     <header className="topbar">
-      <span className="topbar__word">Hangar</span>
+      {!searchOpen ? (
+        <span
+          className="topbar__word"
+          role="button"
+          tabIndex={0}
+          onClick={onOpenSearch}
+          onKeyDown={(e) => e.key === 'Enter' && onOpenSearch()}
+        >Hangar</span>
+      ) : (
+        <div className="topbar__search">
+          {searchTag ? (
+            <span className="topbar__search-chip">
+              <span className="topbar__search-chip-label">{searchTag}</span>
+              <button type="button" className="topbar__search-chip-x" onClick={onClearTag} aria-label="Clear tag">✕</button>
+            </span>
+          ) : (
+            <input
+              ref={searchInputRef}
+              className="topbar__search-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              aria-label="Search tags"
+            />
+          )}
+          <button type="button" className="topbar__search-x" onClick={onCloseSearch} aria-label="Close search">✕</button>
+        </div>
+      )}
+      {searchOpen && !searchTag && suggestions.length > 0 && (
+        <div className="topbar__suggest">
+          <div className="topbar__suggest-hint">{q === '' ? 'Popular tags' : 'Matching tags'}</div>
+          {suggestions.map((t) => (
+            <button type="button" key={t.tag} className="topbar__suggest-row" onClick={() => onPickTag(t.tag)}>
+              <span className="topbar__suggest-tag">{t.tag}</span>
+              <span className="topbar__suggest-count">{t.count} photo{t.count > 1 ? 's' : ''}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -533,6 +591,8 @@ export default function App() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState(new Set());
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTag, setSearchTag] = useState(null);
 
   function loadPhotos() {
     return fetch('/api/photos')
@@ -593,12 +653,52 @@ export default function App() {
     });
   }
 
+  function handleToggleFilter() {
+    setSearchOpen(false);
+    setSearchTag(null);
+    setFilterOpen(v => !v);
+  }
+
+  function handleOpenSearch() {
+    setSearchOpen(true);
+    setSearchTag(null);
+    setFilterOpen(false);
+    setActiveFilters(new Set());
+  }
+
+  function handleCloseSearch() {
+    setSearchOpen(false);
+    setSearchTag(null);
+  }
+
+  function handlePickTag(tag) {
+    setSearchTag(tag);
+  }
+
+  function handleClearTag() {
+    setSearchTag(null);
+  }
+
   const hasPosted = activeFilters.has('posted');
   const hasNotPosted = activeFilters.has('notPosted');
   const hasStarred = activeFilters.has('starred');
   const hasNotStarred = activeFilters.has('notStarred');
 
+  const tagCounts = {};
+  photos.forEach((p) => {
+    const seen = new Set();
+    parseKeywords(p.keywords).forEach((t) => {
+      if (!seen.has(t)) { seen.add(t); tagCounts[t] = (tagCounts[t] || 0) + 1; }
+    });
+  });
+  const tagPool = Object.keys(tagCounts)
+    .sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b))
+    .map((t) => ({ tag: t, count: tagCounts[t] }));
+
   const displayPhotos = photos.map((p, i) => ({ photo: p, origIdx: i })).filter(({ photo }) => {
+    if (searchTag) {
+      return parseKeywords(photo.keywords).some((k) => k.toLowerCase() === searchTag.toLowerCase());
+    }
     if (hasPosted && !hasNotPosted && !photo.posted) return false;
     if (hasNotPosted && !hasPosted && photo.posted) return false;
     if (hasStarred && !hasNotStarred && !photo.starred) return false;
@@ -626,7 +726,24 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar onUpload={handleUpload} uploading={uploading} filterOpen={filterOpen} onToggleFilter={() => setFilterOpen(v => !v)} activeFilters={activeFilters} onTogglePill={handleTogglePill} />
+      <TopBar
+        onUpload={handleUpload}
+        uploading={uploading}
+        filterOpen={filterOpen}
+        onToggleFilter={handleToggleFilter}
+        activeFilters={activeFilters}
+        onTogglePill={handleTogglePill}
+        searchOpen={searchOpen}
+        searchTag={searchTag}
+        tagPool={tagPool}
+        onOpenSearch={handleOpenSearch}
+        onCloseSearch={handleCloseSearch}
+        onPickTag={handlePickTag}
+        onClearTag={handleClearTag}
+      />
+      {searchTag && displayPhotos.length > 0 && (
+        <p className="app__search-result">{displayPhotos.length} photo{displayPhotos.length > 1 ? 's' : ''} tagged "{searchTag}"</p>
+      )}
       {uploadError && (
         <p className="app__message app__message--error">{uploadError}</p>
       )}
