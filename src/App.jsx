@@ -277,8 +277,9 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
-function TopBar({ onUpload, uploading }) {
+function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill }) {
   const inputRef = useRef(null);
+  const hasActiveFilter = activeFilters.size > 0;
 
   function handleFileChange(e) {
     const file = e.target.files?.[0];
@@ -312,7 +313,58 @@ function TopBar({ onUpload, uploading }) {
           className={`topbar__hangar-img${uploading ? ' topbar__hangar-img--uploading' : ''}`}
         />
       </button>
-      <span className="topbar__num">24</span>
+      <div className="topbar__filter-wrap">
+        <button
+          type="button"
+          className="topbar__num-btn"
+          onClick={onToggleFilter}
+          aria-label="Toggle photo filters"
+          aria-expanded={filterOpen}
+        >
+          <span className="topbar__num">24</span>
+          {hasActiveFilter && <span className="topbar__num-dot" />}
+        </button>
+        {filterOpen && (
+          <div className="topbar__filter-tray">
+            <button
+              type="button"
+              className={`filter-pill${activeFilters.has('posted') ? ' filter-pill--active' : ''}`}
+              onClick={() => onTogglePill('posted')}
+              aria-label="Filter: Posted"
+              aria-pressed={activeFilters.has('posted')}
+            >
+              <img className="filter-pill__icon" src="/icon-posted-on.png" alt="Posted" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </button>
+            <button
+              type="button"
+              className={`filter-pill${activeFilters.has('notPosted') ? ' filter-pill--active' : ''}`}
+              onClick={() => onTogglePill('notPosted')}
+              aria-label="Filter: Not posted"
+              aria-pressed={activeFilters.has('notPosted')}
+            >
+              <img className="filter-pill__icon" src="/icon-posted-off.png" alt="Not posted" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </button>
+            <button
+              type="button"
+              className={`filter-pill${activeFilters.has('starred') ? ' filter-pill--active' : ''}`}
+              onClick={() => onTogglePill('starred')}
+              aria-label="Filter: Starred"
+              aria-pressed={activeFilters.has('starred')}
+            >
+              <img className="filter-pill__icon" src="/icon-star-on.png" alt="Starred" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </button>
+            <button
+              type="button"
+              className={`filter-pill${activeFilters.has('notStarred') ? ' filter-pill--active' : ''}`}
+              onClick={() => onTogglePill('notStarred')}
+              aria-label="Filter: Not starred"
+              aria-pressed={activeFilters.has('notStarred')}
+            >
+              <img className="filter-pill__icon" src="/icon-star-off.png" alt="Not starred" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
@@ -459,12 +511,19 @@ function PhotoTile({ photo, onClick }) {
 
 // ── Wall ──────────────────────────────────────────────────────────────────────
 
-function Wall({ photos, onSelect }) {
+function Wall({ displayPhotos, onSelect }) {
+  if (displayPhotos.length === 0) {
+    return (
+      <section className="wall">
+        <p className="wall__empty">No photos match</p>
+      </section>
+    );
+  }
   return (
     <section className="wall">
       <div className="wall__grid">
-        {photos.map((photo, idx) => (
-          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(idx)} />
+        {displayPhotos.map(({ photo, origIdx }) => (
+          <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(origIdx)} />
         ))}
       </div>
     </section>
@@ -479,6 +538,8 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState(new Set());
 
   function loadPhotos() {
     return fetch('/api/photos')
@@ -531,6 +592,27 @@ export default function App() {
     setPhotos(ps => ps.map(p => p.id === id ? { ...p, starred } : p));
   }
 
+  function handleTogglePill(pill) {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(pill)) { next.delete(pill); } else { next.add(pill); }
+      return next;
+    });
+  }
+
+  const hasPosted = activeFilters.has('posted');
+  const hasNotPosted = activeFilters.has('notPosted');
+  const hasStarred = activeFilters.has('starred');
+  const hasNotStarred = activeFilters.has('notStarred');
+
+  const displayPhotos = photos.map((p, i) => ({ photo: p, origIdx: i })).filter(({ photo }) => {
+    if (hasPosted && !hasNotPosted && !photo.posted) return false;
+    if (hasNotPosted && !hasPosted && photo.posted) return false;
+    if (hasStarred && !hasNotStarred && !photo.starred) return false;
+    if (hasNotStarred && !hasStarred && photo.starred) return false;
+    return true;
+  });
+
   if (selectedIndex !== null && photos.length > 0) {
     return (
       <div className="app">
@@ -551,13 +633,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar onUpload={handleUpload} uploading={uploading} />
+      <TopBar onUpload={handleUpload} uploading={uploading} filterOpen={filterOpen} onToggleFilter={() => setFilterOpen(v => !v)} activeFilters={activeFilters} onTogglePill={handleTogglePill} />
       {uploadError && (
         <p className="app__message app__message--error">{uploadError}</p>
       )}
       {status === 'loading' && <p className="app__message">Loading…</p>}
       {status === 'error' && <p className="app__message app__message--error">Failed to load photos.</p>}
-      {status === 'ready' && <Wall photos={photos} onSelect={setSelectedIndex} />}
+      {status === 'ready' && <Wall displayPhotos={displayPhotos} onSelect={setSelectedIndex} />}
     </div>
   );
 }

@@ -24,6 +24,7 @@
   padding: 0 1rem;
   height: 120px;
   flex-shrink: 0;
+  position: relative;
 }
 
 @media (min-width: 480px) {
@@ -50,8 +51,87 @@
   font-weight: 400;
   color: #FBAD19;
   user-select: none;
-  margin-right: 0.75rem;
+}
+
+.topbar__filter-wrap {
+  position: relative;
   align-self: center;
+  margin-right: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.topbar__num-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.topbar__num-dot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #DFD3C2;
+  margin-top: 3px;
+}
+
+.topbar__filter-tray {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: #252D33;
+  border: 1px solid rgba(223, 211, 194, 0.12);
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+  z-index: 20;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+}
+
+.filter-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  border: 1px solid rgba(223, 211, 194, 0.15);
+  background: rgba(55, 70, 82, 0.6);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filter-pill--active {
+  border-color: #FBAD19;
+  background: rgba(251, 173, 25, 0.15);
+}
+
+.filter-pill:not(.filter-pill--active):hover {
+  border-color: rgba(223, 211, 194, 0.35);
+}
+
+.filter-pill__icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.filter-pill__icon[src*="star"] {
+  width: 36px;
+  height: 36px;
 }
 
 @media (min-width: 480px) {
@@ -60,6 +140,8 @@
   }
   .topbar__num {
     font-size: 2.4rem;
+  }
+  .topbar__filter-wrap {
     margin-right: 1rem;
   }
 }
@@ -128,6 +210,15 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
+}
+
+/* ── Wall empty state ──────────────────────────────────────── */
+.wall__empty {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(183, 169, 156, 0.45);
+  letter-spacing: 0.04em;
 }
 
 /* ── Photo tile ────────────────────────────────────────────── */
