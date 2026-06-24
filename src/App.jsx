@@ -17,7 +17,7 @@ function ExifCell({ icon, label, value }) {
 
 // ── DetailInfo ────────────────────────────────────────────────────────────────
 
-function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpdate }) {
+function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpdate, onStarredUpdate }) {
   const parts = photo.taken_at ? photo.taken_at.split(' ') : [];
   const dateStr = parts[0] || null;
   const timeStr = parts[1] || null;
@@ -41,6 +41,9 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
   const [localPosted, setLocalPosted] = useState(photo.posted ? 1 : 0);
   const [postedSaving, setPostedSaving] = useState(false);
   const [postedError, setPostedError] = useState(null);
+  const [localStarred, setLocalStarred] = useState(photo.starred ? 1 : 0);
+  const [starredSaving, setStarredSaving] = useState(false);
+  const [starredError, setStarredError] = useState(null);
 
   useEffect(() => {
     setEditMode(false);
@@ -52,6 +55,8 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
     setAdminOpen(false);
     setLocalPosted(photo.posted ? 1 : 0);
     setPostedError(null);
+    setLocalStarred(photo.starred ? 1 : 0);
+    setStarredError(null);
   }, [photo.id]);
 
   async function handleCopy() {
@@ -120,6 +125,29 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
       setPostedError(err.message || 'Update failed');
     } finally {
       setPostedSaving(false);
+    }
+  }
+
+  async function handleStarredToggle() {
+    if (starredSaving) return;
+    const newStarred = localStarred ? 0 : 1;
+    setLocalStarred(newStarred);
+    setStarredSaving(true);
+    setStarredError(null);
+    try {
+      const res = await fetch(`/api/photos/${photo.id}/starred`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ starred: newStarred }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Update failed');
+      onStarredUpdate(photo.id, newStarred);
+    } catch (err) {
+      setLocalStarred(newStarred ? 0 : 1);
+      setStarredError(err.message || 'Update failed');
+    } finally {
+      setStarredSaving(false);
     }
   }
 
@@ -192,6 +220,20 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
                 onError={e => { e.currentTarget.style.display = 'none'; }}
               />
             </button>
+            <button
+              type="button"
+              className="detail__posted-btn"
+              onClick={handleStarredToggle}
+              disabled={starredSaving}
+              aria-label={localStarred ? 'Mark as not starred' : 'Mark as starred'}
+            >
+              <img
+                className="detail__posted-icon"
+                src={localStarred ? '/icon-star-on.png' : '/icon-star-off.png'}
+                alt={localStarred ? 'Starred' : 'Not starred'}
+                onError={e => { e.currentTarget.style.display = 'none'; }}
+              />
+            </button>
             <button type="button" className="detail__back-arrow" onClick={onBack} aria-label="Back">
               ‹
             </button>
@@ -210,6 +252,7 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
             </div>
           )}
           {postedError && <p className="detail__action-error">{postedError}</p>}
+          {starredError && <p className="detail__action-error">{starredError}</p>}
         </>
       )}
 
@@ -276,7 +319,7 @@ function TopBar({ onUpload, uploading }) {
 
 // ── DetailView ────────────────────────────────────────────────────────────────
 
-function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete, onPostedUpdate }) {
+function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete, onPostedUpdate, onStarredUpdate }) {
   const photo = photos[index];
 
   // 0 = try preview, 1 = try original, 2 = failed
@@ -368,6 +411,7 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
           onDelete={onDelete}
           onBack={onBack}
           onPostedUpdate={onPostedUpdate}
+          onStarredUpdate={onStarredUpdate}
         />
       )}
     </div>
@@ -483,6 +527,10 @@ export default function App() {
     setPhotos(ps => ps.map(p => p.id === id ? { ...p, posted } : p));
   }
 
+  function handleStarredUpdate(id, starred) {
+    setPhotos(ps => ps.map(p => p.id === id ? { ...p, starred } : p));
+  }
+
   if (selectedIndex !== null && photos.length > 0) {
     return (
       <div className="app">
@@ -495,6 +543,7 @@ export default function App() {
           onDescriptionUpdate={handleDescriptionUpdate}
           onDelete={handleDelete}
           onPostedUpdate={handlePostedUpdate}
+          onStarredUpdate={handleStarredUpdate}
         />
       </div>
     );

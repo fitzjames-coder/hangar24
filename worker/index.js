@@ -263,7 +263,7 @@ export default {
            title, description, keywords, taken_at, camera, lens,
            aperture, shutter, iso, focal_length, focal_length_35mm,
            flash, white_balance, metering, megapixels, aspect_ratio, file_size,
-           posted
+           posted, starred
          FROM photos ORDER BY id DESC`
       ).all();
       return Response.json({ photos: results });
@@ -413,6 +413,25 @@ export default {
         const posted = body.posted ? 1 : 0;
         await env.DB.prepare('UPDATE photos SET posted = ? WHERE id = ?').bind(posted, id).run();
         return Response.json({ ok: true, id, posted });
+      } catch (err) {
+        return Response.json({ ok: false, error: err.message }, { status: 500 });
+      }
+    }
+
+    const photoStarredMatch = url.pathname.match(/^\/api\/photos\/(\d+)\/starred$/);
+    if (request.method === 'POST' && photoStarredMatch) {
+      try {
+        const id = parseInt(photoStarredMatch[1], 10);
+        let body;
+        try { body = await request.json(); } catch (_) {
+          return Response.json({ ok: false, error: 'invalid JSON body' }, { status: 400 });
+        }
+        if (body === null || typeof body.starred === 'undefined') {
+          return Response.json({ ok: false, error: 'missing starred field' }, { status: 400 });
+        }
+        const starred = body.starred ? 1 : 0;
+        await env.DB.prepare('UPDATE photos SET starred = ? WHERE id = ?').bind(starred, id).run();
+        return Response.json({ ok: true, id, starred });
       } catch (err) {
         return Response.json({ ok: false, error: err.message }, { status: 500 });
       }
