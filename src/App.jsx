@@ -139,7 +139,7 @@ function ExifCell({ icon, label, value }) {
 
 // ── DetailInfo ────────────────────────────────────────────────────────────────
 
-function DetailInfo({ photo }) {
+function DetailInfo({ photo, onDescriptionUpdate, onDelete }) {
   const parts = photo.taken_at ? photo.taken_at.split(' ') : [];
   const dateStr = parts[0] || null;
   const timeStr = parts[1] || null;
@@ -149,6 +149,70 @@ function DetailInfo({ photo }) {
     focalDisplay = `${photo.focal_length_35mm} (${photo.focal_length})`;
   } else if (photo.focal_length_35mm && !photo.focal_length) {
     focalDisplay = photo.focal_length_35mm;
+  }
+
+  const [copyState, setCopyState] = useState('idle');
+  const [editMode, setEditMode] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [editError, setEditError] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [deleteStep, setDeleteStep] = useState('idle');
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    setEditMode(false);
+    setEditText('');
+    setEditError(null);
+    setDeleteStep('idle');
+    setDeleteError(null);
+    setCopyState('idle');
+  }, [photo.id]);
+
+  async function handleCopy() {
+    try { await navigator.clipboard.writeText(photo.description || ''); } catch (_) {}
+    setCopyState('copied');
+    setTimeout(() => setCopyState('idle'), 1500);
+  }
+
+  function handleEditStart() {
+    setEditText(photo.description || '');
+    setEditError(null);
+    setEditMode(true);
+  }
+
+  async function handleSave() {
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      const res = await fetch(`/api/photos/${photo.id}/description`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: editText }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Save failed');
+      onDescriptionUpdate(photo.id, editText);
+      setEditMode(false);
+    } catch (err) {
+      setEditError(err.message || 'Save failed');
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/photos/${photo.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Delete failed');
+      onDelete(photo.id);
+    } catch (err) {
+      setDeleteError(err.message || 'Delete failed');
+      setDeleting(false);
+    }
   }
 
   return (
@@ -161,9 +225,56 @@ function DetailInfo({ photo }) {
           )}
         </div>
       )}
-      {photo.description && (
-        <p className="detail__desc">{photo.description}</p>
+
+      {deleteStep === 'confirm' ? (
+        <div className="detail__delete-confirm">
+          <p className="detail__delete-msg">Delete this photo? This can't be undone.</p>
+          {deleteError && <p className="detail__action-error">{deleteError}</p>}
+          <div className="detail__actions">
+            <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={handleConfirmDelete} disabled={deleting}>
+              {deleting ? 'Deleting…' : 'Confirm Delete'}
+            </button>
+            <button type="button" className="detail__action-btn" onClick={() => { setDeleteStep('idle'); setDeleteError(null); }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : editMode ? (
+        <>
+          <textarea
+            className="detail__desc-textarea"
+            value={editText}
+            onChange={e => setEditText(e.target.value)}
+            rows={4}
+            placeholder="Add a description…"
+          />
+          {editError && <p className="detail__action-error">{editError}</p>}
+          <div className="detail__actions">
+            <button type="button" className="detail__action-btn detail__action-btn--primary" onClick={handleSave} disabled={editSaving}>
+              {editSaving ? 'Saving…' : 'Save'}
+            </button>
+            <button type="button" className="detail__action-btn" onClick={() => { setEditMode(false); setEditError(null); }}>
+              Cancel
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          {photo.description && <p className="detail__desc">{photo.description}</p>}
+          <div className="detail__actions">
+            <button type="button" className="detail__action-btn" onClick={handleCopy} disabled={!photo.description}>
+              {copyState === 'copied' ? 'Copied ✓' : 'Copy'}
+            </button>
+            <button type="button" className="detail__action-btn" onClick={handleEditStart}>
+              Edit
+            </button>
+            <button type="button" className="detail__action-btn detail__action-btn--danger" onClick={() => setDeleteStep('confirm')}>
+              Delete
+            </button>
+          </div>
+        </>
       )}
+
       <section className="exif">
         <h3 className="exif__header">TECHNICAL</h3>
         <div className="exif__grid">
@@ -227,7 +338,7 @@ function TopBar({ onUpload, uploading }) {
 
 // ── DetailView ────────────────────────────────────────────────────────────────
 
-function DetailView({ photos, index, onBack, onPrev, onNext }) {
+function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete }) {
   const photo = photos[index];
 
   // 0 = try preview, 1 = try original, 2 = failed
@@ -317,7 +428,7 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
           </div>
         )}
       </div>
-      {chromeVisible && <DetailInfo photo={photo} />}
+      {chromeVisible && <DetailInfo photo={photo} onDescriptionUpdate={onDescriptionUpdate} onDelete={onDelete} />}
     </div>
   );
 }
@@ -418,6 +529,15 @@ export default function App() {
     }
   }
 
+  function handleDescriptionUpdate(id, description) {
+    setPhotos(ps => ps.map(p => p.id === id ? { ...p, description } : p));
+  }
+
+  function handleDelete(id) {
+    setPhotos(ps => ps.filter(p => p.id !== id));
+    setSelectedIndex(null);
+  }
+
   if (selectedIndex !== null && photos.length > 0) {
     return (
       <div className="app">
@@ -427,6 +547,8 @@ export default function App() {
           onBack={() => setSelectedIndex(null)}
           onPrev={() => setSelectedIndex(i => Math.max(0, i - 1))}
           onNext={() => setSelectedIndex(i => Math.min(photos.length - 1, i + 1))}
+          onDescriptionUpdate={handleDescriptionUpdate}
+          onDelete={handleDelete}
         />
       </div>
     );
