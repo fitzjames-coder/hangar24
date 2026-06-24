@@ -156,19 +156,26 @@
 
 /* ── Detail view ───────────────────────────────────────────── */
 .detail {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background: #0A0E13;
+  overflow: hidden;
 }
 
 .detail__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
-  background: #374652;
   padding: 0 1rem;
   height: 52px;
-  flex-shrink: 0;
+  background: linear-gradient(to bottom, rgba(10, 14, 19, 0.75) 0%, transparent 100%);
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 @media (min-width: 480px) {
@@ -176,6 +183,12 @@
     padding: 0 1.5rem;
     height: 58px;
   }
+}
+
+.detail__bar.is-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .detail__back {
@@ -208,21 +221,17 @@
 .detail__body {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 2rem 1rem 3rem;
-}
-
-@media (min-width: 480px) {
-  .detail__body {
-    padding: 3rem 1.5rem 4rem;
-  }
+  justify-content: center;
+  min-height: 100vh;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .detail__img {
   display: block;
   max-width: 100%;
-  max-height: 70vh;
+  max-height: 100vh;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -234,7 +243,15 @@
   padding: 3rem 0;
 }
 
-.detail__spacer {
-  min-height: 3rem;
-  width: 100%;
+/* ── Landscape: fix viewport for iOS Safari ────────────────── */
+@media (orientation: landscape) {
+  .detail {
+    position: fixed;
+    inset: 0;
+    min-height: unset;
+  }
+
+  .detail__body {
+    min-height: unset;
+  }
 }
