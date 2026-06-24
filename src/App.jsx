@@ -43,8 +43,6 @@ function TopBar({ onUpload, uploading }) {
 
 function DetailView({ photos, index, onBack, onPrev, onNext }) {
   const photo = photos[index];
-  const isFirst = index === 0;
-  const isLast = index === photos.length - 1;
 
   // 0 = try preview, 1 = try original, 2 = failed
   const [fallbackLevel, setFallbackLevel] = useState(0);
@@ -87,15 +85,6 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
         </button>
       </header>
       <div className="detail__body">
-        <button
-          type="button"
-          className="detail__nav detail__nav--prev"
-          onClick={onPrev}
-          disabled={isFirst}
-          aria-label="Previous photo"
-        >
-          ‹
-        </button>
         {imgFailed ? (
           <p className="detail__unavailable">Image unavailable</p>
         ) : (
@@ -106,15 +95,6 @@ function DetailView({ photos, index, onBack, onPrev, onNext }) {
             onError={() => setFallbackLevel(l => l + 1)}
           />
         )}
-        <button
-          type="button"
-          className="detail__nav detail__nav--next"
-          onClick={onNext}
-          disabled={isLast}
-          aria-label="Next photo"
-        >
-          ›
-        </button>
         <div className="detail__spacer" />
       </div>
     </div>
