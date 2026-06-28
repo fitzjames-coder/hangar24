@@ -280,7 +280,7 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
-function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag }) {
+function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag, albums, currentAlbumId, onPickAlbum }) {
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
   const hasActiveFilter = activeFilters.size > 0;
@@ -329,6 +329,21 @@ function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters
             />
           )}
           <button type="button" className="topbar__search-x" onClick={onCloseSearch} aria-label="Close search">✕</button>
+        </div>
+      )}
+      {searchOpen && !searchTag && albums.length > 0 && (
+        <div className="topbar__albums">
+          <div className="topbar__albums-hint">Album</div>
+          <div className="topbar__albums-row">
+            {albums.map((a) => (
+              <button
+                type="button"
+                key={a.id}
+                className={`topbar__album${a.id === currentAlbumId ? ' topbar__album--active' : ''}`}
+                onClick={() => onPickAlbum(a.id)}
+              >{a.name}</button>
+            ))}
+          </div>
         </div>
       )}
       {searchOpen && !searchTag && suggestions.length > 0 && (
@@ -593,9 +608,11 @@ export default function App() {
   const [activeFilters, setActiveFilters] = useState(new Set());
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTag, setSearchTag] = useState(null);
+  const [albums, setAlbums] = useState([]);
+  const [currentAlbumId, setCurrentAlbumId] = useState(1);
 
   function loadPhotos() {
-    return fetch('/api/photos')
+    return fetch('/api/photos?album_id=' + currentAlbumId)
       .then((res) => {
         if (!res.ok) throw new Error('fetch failed');
         return res.json();
@@ -607,7 +624,19 @@ export default function App() {
       .catch(() => setStatus('error'));
   }
 
-  useEffect(() => { loadPhotos(); }, []);
+  useEffect(() => {
+    fetch('/api/albums').then((r) => r.json()).then((d) => setAlbums(d.albums ?? [])).catch(() => {});
+  }, []);
+
+  useEffect(() => { loadPhotos(); }, [currentAlbumId]);
+
+  function handlePickAlbum(id) {
+    setCurrentAlbumId(id);
+    setSearchOpen(false);
+    setSearchTag(null);
+    setSelectedIndex(null);
+    setActiveFilters(new Set());
+  }
 
   async function handleUpload(file) {
     setUploading(true);
@@ -615,7 +644,7 @@ export default function App() {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': file.type, 'X-Filename': file.name },
+        headers: { 'Content-Type': file.type, 'X-Filename': file.name, 'X-Album-Id': String(currentAlbumId) },
         body: file,
       });
       const data = await res.json();
@@ -740,6 +769,9 @@ export default function App() {
         onCloseSearch={handleCloseSearch}
         onPickTag={handlePickTag}
         onClearTag={handleClearTag}
+        albums={albums}
+        currentAlbumId={currentAlbumId}
+        onPickAlbum={handlePickAlbum}
       />
       {searchTag && displayPhotos.length > 0 && (
         <p className="app__search-result">{displayPhotos.length} photo{displayPhotos.length > 1 ? 's' : ''} tagged "{searchTag}"</p>
