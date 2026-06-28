@@ -790,3 +790,21 @@
   font-size: 0.8rem;
   color: #8A837D;
 }
+
+.topbar__albums {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 30;
+  background: var(--h24-panel, #252D33);
+  border: 1px solid rgba(223,211,194,0.18); border-bottom: none;
+  border-radius: 10px 10px 0 0; padding: 10px 12px 6px;
+}
+.topbar__albums-hint {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #8A837D; margin-bottom: 7px;
+}
+.topbar__albums-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.topbar__album {
+  border: 1.5px solid rgba(223,211,194,0.35); background: transparent;
+  color: #DFD3C2; border-radius: 999px; padding: 6px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.topbar__album--active { background: #FBAD19; border-color: #FBAD19; color: #0A0E13; }

@@ -257,15 +257,23 @@ export default {
       return Response.json({ ok: true, app: 'hangar24' });
     }
 
+    if (request.method === 'GET' && url.pathname === '/api/albums') {
+      const { results } = await env.DB.prepare(
+        `SELECT id, name FROM albums ORDER BY id`
+      ).all();
+      return Response.json({ albums: results });
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/photos') {
+      const albumId = Number(url.searchParams.get('album_id')) || 1;
       const { results } = await env.DB.prepare(
         `SELECT id, r2_key, original_filename, uploaded_at,
            title, description, keywords, taken_at, camera, lens,
            aperture, shutter, iso, focal_length, focal_length_35mm,
            flash, white_balance, metering, megapixels, aspect_ratio, file_size,
-           posted, starred
-         FROM photos ORDER BY id DESC`
-      ).all();
+           posted, starred, album_id
+         FROM photos WHERE album_id = ? ORDER BY id DESC`
+      ).bind(albumId).all();
       return Response.json({ photos: results });
     }
 
@@ -316,20 +324,23 @@ export default {
         }
 
         const now = new Date().toISOString();
+        const albumId = Number(request.headers.get('X-Album-Id')) || 1;
         const result = await env.DB.prepare(
           `INSERT INTO photos
              (r2_key, original_filename, uploaded_at,
               title, description, keywords, taken_at, camera, lens,
               aperture, shutter, iso, focal_length, focal_length_35mm,
-              flash, white_balance, metering, megapixels, aspect_ratio, file_size)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              flash, white_balance, metering, megapixels, aspect_ratio, file_size,
+              album_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           key, filename, now,
           meta.title, meta.description, meta.keywords, meta.taken_at,
           meta.camera, meta.lens, meta.aperture, meta.shutter,
           meta.iso, meta.focal_length, meta.focal_length_35mm,
           meta.flash, meta.white_balance, meta.metering,
-          meta.megapixels, meta.aspect_ratio, meta.file_size
+          meta.megapixels, meta.aspect_ratio, meta.file_size,
+          albumId
         ).run();
 
         return Response.json({ ok: true, id: result.meta.last_row_id, r2_key: key });
