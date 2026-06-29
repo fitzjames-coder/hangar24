@@ -43,6 +43,10 @@ function PhotoMap({ photo, onLocationUpdate }) {
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       { maxZoom: 19, attribution: 'Imagery © Esri' }
     ).addTo(map);
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, pane: 'overlayPane' }
+    ).addTo(map);
     mapRef.current = map;
 
     const icon = L.divIcon({ className: 'photo-map__pin', html: '<span></span>', iconSize: [24, 24], iconAnchor: [12, 24] });
