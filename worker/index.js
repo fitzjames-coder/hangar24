@@ -465,6 +465,28 @@ export default {
       }
     }
 
+    const albumIdMatch = url.pathname.match(/^\/api\/albums\/(\d+)$/);
+    if (request.method === 'DELETE' && albumIdMatch) {
+      try {
+        const albumId = parseInt(albumIdMatch[1], 10);
+        if (albumId === 1) {
+          return Response.json({ ok: false, error: 'The Airliners album cannot be deleted.' }, { status: 400 });
+        }
+        const { results } = await env.DB.prepare('SELECT r2_key FROM photos WHERE album_id = ?').bind(albumId).all();
+        for (const row of (results || [])) {
+          const originalKey = row.r2_key;
+          try { await env.IMAGES.delete(originalKey); } catch (_) {}
+          try { await env.IMAGES.delete(toThumbKey(originalKey)); } catch (_) {}
+          try { await env.IMAGES.delete(toPreviewKey(originalKey)); } catch (_) {}
+        }
+        await env.DB.prepare('DELETE FROM photos WHERE album_id = ?').bind(albumId).run();
+        await env.DB.prepare('DELETE FROM albums WHERE id = ?').bind(albumId).run();
+        return Response.json({ ok: true, id: albumId });
+      } catch (err) {
+        return Response.json({ ok: false, error: err.message }, { status: 500 });
+      }
+    }
+
     const photoIdMatch = url.pathname.match(/^\/api\/photos\/(\d+)$/);
     if (request.method === 'DELETE' && photoIdMatch) {
       try {
