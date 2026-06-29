@@ -33,9 +33,13 @@ function PhotoMap({ photo, onLocationUpdate }) {
   const elRef = useRef(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
+  const lockedRef = useRef(false);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     const hasPin = photo.lat != null && photo.lng != null;
+    lockedRef.current = hasPin;
+    setLocked(hasPin);
     const center = hasPin ? [photo.lat, photo.lng] : [20, 0];
     const zoom = hasPin ? 15 : 2;
     const map = L.map(elRef.current).setView(center, zoom);
@@ -65,24 +69,44 @@ function PhotoMap({ photo, onLocationUpdate }) {
       } else {
         const m = L.marker([lat, lng], { icon, draggable: true }).addTo(map);
         m.on('dragend', () => { const p = m.getLatLng(); save(p.lat, p.lng); });
+        if (lockedRef.current && m.dragging) m.dragging.disable();
         markerRef.current = m;
       }
       if (persist) save(lat, lng);
     }
 
     if (hasPin) place(photo.lat, photo.lng, false);
-    map.on('click', (e) => place(e.latlng.lat, e.latlng.lng, true));
+    map.on('click', (e) => { if (lockedRef.current) return; place(e.latlng.lat, e.latlng.lng, true); });
 
     setTimeout(() => map.invalidateSize(), 60);
 
     return () => { map.remove(); mapRef.current = null; markerRef.current = null; };
   }, [photo.id]);
 
+  function toggleLock() {
+    const next = !lockedRef.current;
+    lockedRef.current = next;
+    setLocked(next);
+    const m = markerRef.current;
+    if (m && m.dragging) { if (next) m.dragging.disable(); else m.dragging.enable(); }
+  }
+
   return (
     <section className="photo-map-section">
-      <h3 className="exif__header">LOCATION</h3>
+      <div className="photo-map-head">
+        <h3 className="exif__header">LOCATION</h3>
+        <button
+          type="button"
+          className={`photo-map__lock${locked ? ' photo-map__lock--on' : ''}`}
+          onClick={toggleLock}
+        >{locked ? '🔒 Locked' : '🔓 Unlocked'}</button>
+      </div>
       <div className="photo-map" ref={elRef} />
-      <p className="photo-map__hint">Tap the map to set where this photo was taken. Drag the pin to adjust.</p>
+      <p className="photo-map__hint">
+        {locked
+          ? 'Locked — pan and zoom freely without moving the pin. Tap Locked to edit.'
+          : 'Tap the map to set where this photo was taken. Drag the pin to adjust.'}
+      </p>
     </section>
   );
 }

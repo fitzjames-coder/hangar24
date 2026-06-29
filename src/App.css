@@ -840,3 +840,12 @@
   transform: rotate(-45deg); box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 .photo-map__hint { color: #8A837D; font-size: 0.78rem; margin: 8px 2px 0; line-height: 1.4; }
+
+.photo-map-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.photo-map-head .exif__header { margin: 0; }
+.photo-map__lock {
+  border: 1px solid rgba(223, 211, 194, 0.35); background: transparent;
+  color: #DFD3C2; border-radius: 999px; padding: 4px 11px;
+  font-size: 0.74rem; font-weight: 700; cursor: pointer; letter-spacing: 0.02em;
+}
+.photo-map__lock--on { background: #FBAD19; color: #0A0E13; border-color: #FBAD19; }
