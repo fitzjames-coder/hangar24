@@ -288,7 +288,7 @@ export default {
            title, description, keywords, taken_at, camera, lens,
            aperture, shutter, iso, focal_length, focal_length_35mm,
            flash, white_balance, metering, megapixels, aspect_ratio, file_size,
-           posted, starred, album_id
+           posted, starred, album_id, lat, lng
          FROM photos WHERE album_id = ? ORDER BY id DESC`
       ).bind(albumId).all();
       return Response.json({ photos: results });
@@ -422,6 +422,26 @@ export default {
         const description = String(body.description);
         await env.DB.prepare('UPDATE photos SET description = ? WHERE id = ?').bind(description, id).run();
         return Response.json({ ok: true, id, description });
+      } catch (err) {
+        return Response.json({ ok: false, error: err.message }, { status: 500 });
+      }
+    }
+
+    const photoLocationMatch = url.pathname.match(/^\/api\/photos\/(\d+)\/location$/);
+    if (request.method === 'POST' && photoLocationMatch) {
+      try {
+        const id = parseInt(photoLocationMatch[1], 10);
+        let body;
+        try { body = await request.json(); } catch (_) {
+          return Response.json({ ok: false, error: 'invalid JSON body' }, { status: 400 });
+        }
+        const lat = body && body.lat != null ? Number(body.lat) : null;
+        const lng = body && body.lng != null ? Number(body.lng) : null;
+        if (lat === null || lng === null || Number.isNaN(lat) || Number.isNaN(lng)) {
+          return Response.json({ ok: false, error: 'lat and lng are required numbers' }, { status: 400 });
+        }
+        await env.DB.prepare('UPDATE photos SET lat = ?, lng = ? WHERE id = ?').bind(lat, lng, id).run();
+        return Response.json({ ok: true, id, lat, lng });
       } catch (err) {
         return Response.json({ ok: false, error: err.message }, { status: 500 });
       }

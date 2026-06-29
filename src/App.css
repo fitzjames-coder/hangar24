@@ -827,3 +827,25 @@
 .album-del-btn--cancel { background: transparent; border: 1.5px solid rgba(223, 211, 194, 0.4); color: #DFD3C2; }
 .album-del-btn--go { background: #FBAD19; color: #0A0E13; }
 .album-del-btn--danger { background: #E8607A; color: #0A0E13; }
+
+.photo-map-section { margin-top: 18px; }
+.photo-map {
+  width: 100%; height: 200px; border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(223, 211, 194, 0.18); background: #0A0E13;
+}
+.photo-map .leaflet-container { width: 100%; height: 100%; background: #0A0E13; }
+.photo-map__pin span {
+  display: block; width: 18px; height: 18px; margin: 3px;
+  background: #FBAD19; border: 2px solid #0A0E13; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg); box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.photo-map__hint { color: #8A837D; font-size: 0.78rem; margin: 8px 2px 0; line-height: 1.4; }
+
+.photo-map-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.photo-map-head .exif__header { margin: 0; }
+.photo-map__lock {
+  border: 1px solid rgba(223, 211, 194, 0.35); background: transparent;
+  color: #DFD3C2; border-radius: 999px; padding: 4px 11px;
+  font-size: 0.74rem; font-weight: 700; cursor: pointer; letter-spacing: 0.02em;
+}
+.photo-map__lock--on { background: #FBAD19; color: #0A0E13; border-color: #FBAD19; }
