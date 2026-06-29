@@ -264,6 +264,23 @@ export default {
       return Response.json({ albums: results });
     }
 
+    if (request.method === 'POST' && url.pathname === '/api/albums') {
+      try {
+        const body = await request.json();
+        const name = (body && body.name ? String(body.name) : '').trim();
+        if (!name) {
+          return Response.json({ error: 'Album name is required' }, { status: 400 });
+        }
+        const result = await env.DB.prepare(
+          `INSERT INTO albums (name) VALUES (?)`
+        ).bind(name).run();
+        const id = result.meta.last_row_id;
+        return Response.json({ album: { id, name } });
+      } catch (err) {
+        return Response.json({ error: 'Could not create album' }, { status: 500 });
+      }
+    }
+
     if (request.method === 'GET' && url.pathname === '/api/photos') {
       const albumId = Number(url.searchParams.get('album_id')) || 1;
       const { results } = await env.DB.prepare(

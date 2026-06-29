@@ -280,7 +280,7 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
-function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag, albums, currentAlbumId, onPickAlbum }) {
+function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag, albums, currentAlbumId, onPickAlbum, onCreateAlbum }) {
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
   const hasActiveFilter = activeFilters.size > 0;
@@ -343,6 +343,11 @@ function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters
                 onClick={() => onPickAlbum(a.id)}
               >{a.name}</button>
             ))}
+            <button
+              type="button"
+              className="topbar__album topbar__album--new"
+              onClick={onCreateAlbum}
+            >+ New album</button>
           </div>
         </div>
       )}
@@ -638,6 +643,26 @@ export default function App() {
     setActiveFilters(new Set());
   }
 
+  async function handleCreateAlbum() {
+    const name = (window.prompt('Name the new album') || '').trim();
+    if (!name) return;
+    try {
+      const res = await fetch('/api/albums', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (data && data.album) {
+        const updated = await fetch('/api/albums').then((r) => r.json());
+        setAlbums(updated.albums ?? []);
+        handlePickAlbum(data.album.id);
+      }
+    } catch (err) {
+      window.alert('Could not create the album. Please try again.');
+    }
+  }
+
   async function handleUpload(file) {
     setUploading(true);
     setUploadError(null);
@@ -772,6 +797,7 @@ export default function App() {
         albums={albums}
         currentAlbumId={currentAlbumId}
         onPickAlbum={handlePickAlbum}
+        onCreateAlbum={handleCreateAlbum}
       />
       {searchTag && displayPhotos.length > 0 && (
         <p className="app__search-result">{displayPhotos.length} photo{displayPhotos.length > 1 ? 's' : ''} tagged "{searchTag}"</p>
