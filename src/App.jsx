@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import './App.css';
 
 function parseKeywords(raw) {
@@ -25,9 +27,65 @@ function ExifCell({ icon, label, value }) {
   );
 }
 
+// ── PhotoMap ──────────────────────────────────────────────────────────────────
+
+function PhotoMap({ photo, onLocationUpdate }) {
+  const elRef = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
+  useEffect(() => {
+    const hasPin = photo.lat != null && photo.lng != null;
+    const center = hasPin ? [photo.lat, photo.lng] : [20, 0];
+    const zoom = hasPin ? 15 : 2;
+    const map = L.map(elRef.current).setView(center, zoom);
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Imagery © Esri' }
+    ).addTo(map);
+    mapRef.current = map;
+
+    const icon = L.divIcon({ className: 'photo-map__pin', html: '<span></span>', iconSize: [24, 24], iconAnchor: [12, 24] });
+
+    function save(lat, lng) {
+      fetch(`/api/photos/${photo.id}/location`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lng }),
+      }).then(() => { if (onLocationUpdate) onLocationUpdate(photo.id, lat, lng); }).catch(() => {});
+    }
+
+    function place(lat, lng, persist) {
+      if (markerRef.current) {
+        markerRef.current.setLatLng([lat, lng]);
+      } else {
+        const m = L.marker([lat, lng], { icon, draggable: true }).addTo(map);
+        m.on('dragend', () => { const p = m.getLatLng(); save(p.lat, p.lng); });
+        markerRef.current = m;
+      }
+      if (persist) save(lat, lng);
+    }
+
+    if (hasPin) place(photo.lat, photo.lng, false);
+    map.on('click', (e) => place(e.latlng.lat, e.latlng.lng, true));
+
+    setTimeout(() => map.invalidateSize(), 60);
+
+    return () => { map.remove(); mapRef.current = null; markerRef.current = null; };
+  }, [photo.id]);
+
+  return (
+    <section className="photo-map-section">
+      <h3 className="exif__header">LOCATION</h3>
+      <div className="photo-map" ref={elRef} />
+      <p className="photo-map__hint">Tap the map to set where this photo was taken. Drag the pin to adjust.</p>
+    </section>
+  );
+}
+
 // ── DetailInfo ────────────────────────────────────────────────────────────────
 
-function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpdate, onStarredUpdate }) {
+function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpdate, onStarredUpdate, onLocationUpdate }) {
   const parts = photo.taken_at ? photo.taken_at.split(' ') : [];
   const dateStr = parts[0] || null;
   const timeStr = parts[1] || null;
@@ -274,6 +332,7 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
           <ExifCell icon={<img className="exif__icon-img" src="/icon-filesize.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />} label="FILE SIZE" value={photo.file_size} />
         </div>
       </section>
+      <PhotoMap photo={photo} onLocationUpdate={onLocationUpdate} />
     </div>
   );
 }
@@ -466,7 +525,7 @@ function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters
 
 // ── DetailView ────────────────────────────────────────────────────────────────
 
-function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete, onPostedUpdate, onStarredUpdate }) {
+function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate, onDelete, onPostedUpdate, onStarredUpdate, onLocationUpdate }) {
   const photo = photos[index];
 
   // 0 = try preview, 1 = try original, 2 = failed
@@ -559,6 +618,7 @@ function DetailView({ photos, index, onBack, onPrev, onNext, onDescriptionUpdate
           onBack={onBack}
           onPostedUpdate={onPostedUpdate}
           onStarredUpdate={onStarredUpdate}
+          onLocationUpdate={onLocationUpdate}
         />
       )}
     </div>
@@ -747,6 +807,10 @@ export default function App() {
     setPhotos(ps => ps.map(p => p.id === id ? { ...p, posted } : p));
   }
 
+  function handleLocationUpdate(id, lat, lng) {
+    setPhotos(ps => ps.map(p => p.id === id ? { ...p, lat, lng } : p));
+  }
+
   function handleStarredUpdate(id, starred) {
     setPhotos(ps => ps.map(p => p.id === id ? { ...p, starred } : p));
   }
@@ -825,6 +889,7 @@ export default function App() {
           onDelete={handleDelete}
           onPostedUpdate={handlePostedUpdate}
           onStarredUpdate={handleStarredUpdate}
+          onLocationUpdate={handleLocationUpdate}
         />
       </div>
     );
