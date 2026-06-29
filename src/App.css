@@ -808,3 +808,22 @@
   font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .topbar__album--active { background: #FBAD19; border-color: #FBAD19; color: #0A0E13; }
+
+.album-del-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(10, 14, 19, 0.72);
+  display: flex; align-items: center; justify-content: center; padding: 22px;
+}
+.album-del-card {
+  width: 100%; max-width: 360px;
+  background: #374652; border: 1px solid rgba(223, 211, 194, 0.18);
+  border-radius: 14px; padding: 18px 16px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5);
+}
+.album-del-title { color: #DFD3C2; font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+.album-del-text { color: #B7A99C; font-size: 0.85rem; line-height: 1.45; margin: 0 0 16px; }
+.album-del-row { display: flex; gap: 10px; justify-content: flex-end; }
+.album-del-btn { border: none; border-radius: 9px; padding: 9px 16px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+.album-del-btn--cancel { background: transparent; border: 1.5px solid rgba(223, 211, 194, 0.4); color: #DFD3C2; }
+.album-del-btn--go { background: #FBAD19; color: #0A0E13; }
+.album-del-btn--danger { background: #E8607A; color: #0A0E13; }

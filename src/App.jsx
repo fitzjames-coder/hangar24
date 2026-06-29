@@ -280,7 +280,30 @@ function DetailInfo({ photo, onDescriptionUpdate, onDelete, onBack, onPostedUpda
 
 // ── TopBar ────────────────────────────────────────────────────────────────────
 
-function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag, albums, currentAlbumId, onPickAlbum, onCreateAlbum }) {
+function AlbumPill({ album, active, onPick, onLongPressDelete }) {
+  const timer = useRef(null);
+  const fired = useRef(false);
+  function start() {
+    fired.current = false;
+    if (album.id === 1) return;
+    timer.current = setTimeout(() => { fired.current = true; onLongPressDelete(album); }, 1500);
+  }
+  function cancel() { if (timer.current) { clearTimeout(timer.current); timer.current = null; } }
+  function handleClick() { if (fired.current) { fired.current = false; return; } onPick(album.id); }
+  return (
+    <button
+      type="button"
+      className={`topbar__album${active ? ' topbar__album--active' : ''}`}
+      onClick={handleClick}
+      onPointerDown={start}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onContextMenu={(e) => e.preventDefault()}
+    >{album.name}</button>
+  );
+}
+
+function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters, onTogglePill, searchOpen, searchTag, tagPool, onOpenSearch, onCloseSearch, onPickTag, onClearTag, albums, currentAlbumId, onPickAlbum, onCreateAlbum, onDeleteAlbum }) {
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
   const hasActiveFilter = activeFilters.size > 0;
@@ -336,12 +359,13 @@ function TopBar({ onUpload, uploading, filterOpen, onToggleFilter, activeFilters
           <div className="topbar__albums-hint">Album</div>
           <div className="topbar__albums-row">
             {albums.map((a) => (
-              <button
-                type="button"
+              <AlbumPill
                 key={a.id}
-                className={`topbar__album${a.id === currentAlbumId ? ' topbar__album--active' : ''}`}
-                onClick={() => onPickAlbum(a.id)}
-              >{a.name}</button>
+                album={a}
+                active={a.id === currentAlbumId}
+                onPick={onPickAlbum}
+                onLongPressDelete={onDeleteAlbum}
+              />
             ))}
             <button
               type="button"
@@ -643,6 +667,34 @@ export default function App() {
     setActiveFilters(new Set());
   }
 
+  const [deleteAlbumTarget, setDeleteAlbumTarget] = useState(null);
+  const [deleteAlbumStep, setDeleteAlbumStep] = useState(0);
+
+  function handleDeleteAlbum(album) {
+    if (!album || album.id === 1) return;
+    setDeleteAlbumTarget(album);
+    setDeleteAlbumStep(1);
+  }
+
+  function cancelDeleteAlbum() {
+    setDeleteAlbumTarget(null);
+    setDeleteAlbumStep(0);
+  }
+
+  async function confirmDeleteAlbum() {
+    const album = deleteAlbumTarget;
+    if (!album) return;
+    try {
+      await fetch('/api/albums/' + album.id, { method: 'DELETE' });
+      const updated = await fetch('/api/albums').then((r) => r.json());
+      setAlbums(updated.albums ?? []);
+      if (currentAlbumId === album.id) handlePickAlbum(1);
+    } catch (err) {
+      window.alert('Could not delete the album. Please try again.');
+    }
+    cancelDeleteAlbum();
+  }
+
   async function handleCreateAlbum() {
     const name = (window.prompt('Name the new album') || '').trim();
     if (!name) return;
@@ -798,7 +850,32 @@ export default function App() {
         currentAlbumId={currentAlbumId}
         onPickAlbum={handlePickAlbum}
         onCreateAlbum={handleCreateAlbum}
+        onDeleteAlbum={handleDeleteAlbum}
       />
+      {deleteAlbumStep === 1 && deleteAlbumTarget && (
+        <div className="album-del-overlay" onClick={cancelDeleteAlbum}>
+          <div className="album-del-card" onClick={(e) => e.stopPropagation()}>
+            <div className="album-del-title">Delete "{deleteAlbumTarget.name}"?</div>
+            <p className="album-del-text">This will permanently delete the album and every photo inside it. Do you understand?</p>
+            <div className="album-del-row">
+              <button className="album-del-btn album-del-btn--cancel" onClick={cancelDeleteAlbum}>Cancel</button>
+              <button className="album-del-btn album-del-btn--go" onClick={() => setDeleteAlbumStep(2)}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteAlbumStep === 2 && deleteAlbumTarget && (
+        <div className="album-del-overlay" onClick={cancelDeleteAlbum}>
+          <div className="album-del-card" onClick={(e) => e.stopPropagation()}>
+            <div className="album-del-title">Permanently delete?</div>
+            <p className="album-del-text">This action cannot be undone. The album "{deleteAlbumTarget.name}" and all of its photos will be permanently deleted.</p>
+            <div className="album-del-row">
+              <button className="album-del-btn album-del-btn--cancel" onClick={cancelDeleteAlbum}>Cancel</button>
+              <button className="album-del-btn album-del-btn--danger" onClick={confirmDeleteAlbum}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
       {searchTag && displayPhotos.length > 0 && (
         <p className="app__search-result">{displayPhotos.length} photo{displayPhotos.length > 1 ? 's' : ''} tagged "{searchTag}"</p>
       )}
