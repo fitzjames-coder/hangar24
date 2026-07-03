@@ -1,0 +1,14 @@
+{
+  "name": "Hangar 24",
+  "short_name": "Hangar 24",
+  "description": "Hangar 24 — a private aircraft photo gallery.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0A0E13",
+  "theme_color": "#374652",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
