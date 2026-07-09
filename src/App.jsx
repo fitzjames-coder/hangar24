@@ -683,6 +683,8 @@ function PhotoTile({ photo, onClick }) {
         className="wall__tile-img"
         src={`/img/${photo.r2_key}?size=thumb`}
         alt={photo.original_filename || ''}
+        loading="lazy"
+        decoding="async"
         onError={() => setImgFailed(true)}
       />
       {photo.title && (
@@ -694,7 +696,28 @@ function PhotoTile({ photo, onClick }) {
 
 // ── Wall ──────────────────────────────────────────────────────────────────────
 
+const WALL_BATCH = 60;
+
 function Wall({ displayPhotos, onSelect }) {
+  const [visibleCount, setVisibleCount] = useState(WALL_BATCH);
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    setVisibleCount(WALL_BATCH);
+  }, [displayPhotos]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setVisibleCount((c) => Math.min(c + WALL_BATCH, displayPhotos.length));
+      }
+    }, { rootMargin: '600px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [displayPhotos.length]);
+
   if (displayPhotos.length === 0) {
     return (
       <section className="wall">
@@ -705,10 +728,13 @@ function Wall({ displayPhotos, onSelect }) {
   return (
     <section className="wall">
       <div className="wall__grid">
-        {displayPhotos.map(({ photo, origIdx }) => (
+        {displayPhotos.slice(0, visibleCount).map(({ photo, origIdx }) => (
           <PhotoTile key={photo.id} photo={photo} onClick={() => onSelect(origIdx)} />
         ))}
       </div>
+      {visibleCount < displayPhotos.length && (
+        <div ref={sentinelRef} className="wall__sentinel" aria-hidden="true" />
+      )}
     </section>
   );
 }
