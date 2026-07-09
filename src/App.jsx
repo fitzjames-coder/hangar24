@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import './App.css';
 
 function parseKeywords(raw) {
@@ -36,13 +34,38 @@ function PhotoMap({ photo, onLocationUpdate }) {
   const lockedRef = useRef(false);
   const [locked, setLocked] = useState(false);
 
+  const [mapVisible, setMapVisible] = useState(false);
+
   useEffect(() => {
+    const el = elRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setMapVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [photo.id]);
+
+  useEffect(() => {
+    if (!mapVisible) return;
+    let cancelled = false;
+    let map = null;
+
+    (async () => {
+    const [{ default: L }] = await Promise.all([
+      import('leaflet'),
+      import('leaflet/dist/leaflet.css'),
+    ]);
+    if (cancelled || !elRef.current) return;
     const hasPin = photo.lat != null && photo.lng != null;
     lockedRef.current = hasPin;
     setLocked(hasPin);
     const center = hasPin ? [photo.lat, photo.lng] : [20, 0];
     const zoom = hasPin ? 15 : 2;
-    const map = L.map(elRef.current).setView(center, zoom);
+    map = L.map(elRef.current).setView(center, zoom);
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       { maxZoom: 19, attribution: 'Imagery © Esri' }
@@ -79,9 +102,15 @@ function PhotoMap({ photo, onLocationUpdate }) {
     map.on('click', (e) => { if (lockedRef.current) return; place(e.latlng.lat, e.latlng.lng, true); });
 
     setTimeout(() => map.invalidateSize(), 60);
+    })();
 
-    return () => { map.remove(); mapRef.current = null; markerRef.current = null; };
-  }, [photo.id]);
+    return () => {
+      cancelled = true;
+      if (map) { map.remove(); }
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+  }, [photo.id, mapVisible]);
 
   function toggleLock() {
     const next = !lockedRef.current;
